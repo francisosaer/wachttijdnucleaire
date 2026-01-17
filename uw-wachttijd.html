@@ -25,8 +25,6 @@
 <script>
 // Eindtijd ophalen uit URL
 const end = Number(new URLSearchParams(window.location.search).get("end"));
-
-// Variabele om waarschuwing slechts 1 keer te geven
 let waarschuwingGegeven = false;
 
 if (!end) {
@@ -37,7 +35,7 @@ if (!end) {
 
     if (diff <= 0) {
       document.getElementById("timer").innerText = "U bent aan de beurt";
-      clearInterval(interval); // Stop timer
+      clearInterval(interval);
     } else {
       const min = Math.floor(diff / 60000);
       const sec = Math.floor((diff % 60000) / 1000);
@@ -47,12 +45,17 @@ if (!end) {
       if (!waarschuwingGegeven && diff <= 5 * 60000) {
         waarschuwingGegeven = true;
 
-        // Trillen op smartphone (0,5 seconde)
-        if (navigator.vibrate) navigator.vibrate(500);
+        // Trillen (Android)
+        if (navigator.vibrate) navigator.vibrate([500,200,500]);
 
-        // Extra visuele waarschuwing
-        document.getElementById("timer").style.color = "red";
-        document.getElementById("timer").innerText += " (nog 5 minuten!)";
+        // Visuele waarschuwing
+        const timerDiv = document.getElementById("timer");
+        timerDiv.style.color = "red";
+        timerDiv.innerText += " (nog 5 minuten!)";
+
+        // Geluid als extra waarschuwing (iOS/Android)
+        const audio = new Audio("https://actions.google.com/sounds/v1/alarms/alarm_clock.ogg");
+        audio.play().catch(()=>{});
       }
     }
   }, 1000);
