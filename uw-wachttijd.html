@@ -15,12 +15,6 @@
     margin-top: 20px;
     color: black;
   }
-  #startBtn {
-    font-size: 20px;
-    padding: 15px 25px;
-    margin-top: 30px;
-    cursor: pointer;
-  }
 </style>
 </head>
 <body>
@@ -28,29 +22,24 @@
 <h1>Uw wachttijd</h1>
 <div id="timer">Laden…</div>
 
-<button id="startBtn">Tik hier om geluid/trilling te activeren</button>
-
 <script>
+// Eindtijd ophalen uit URL
 const end = Number(new URLSearchParams(window.location.search).get("end"));
 let waarschuwingGegeven = false;
-let timerInterval = null;
-let alarmAudio = new Audio("https://actions.google.com/sounds/v1/alarms/alarm_clock.ogg");
 
-// Start timer functie (pas op na klik, zodat geluid/trilling werkt)
-function startTimer() {
-  document.getElementById("startBtn").style.display = "none"; // knop verbergen
+// Rustig belgeluid (kort, vriendelijk)
+const alarmAudio = new Audio("https://actions.google.com/sounds/v1/alarms/medium_bell.ogg");
 
-  if (!end) {
-    document.getElementById("timer").innerText = "Geen wachttijd ingesteld";
-    return;
-  }
-
-  timerInterval = setInterval(() => {
+// Start timer automatisch
+if (!end) {
+  document.getElementById("timer").innerText = "Geen wachttijd ingesteld";
+} else {
+  const interval = setInterval(() => {
     const diff = end - Date.now();
 
     if (diff <= 0) {
       document.getElementById("timer").innerText = "U bent aan de beurt";
-      clearInterval(timerInterval);
+      clearInterval(interval);
     } else {
       const min = Math.floor(diff / 60000);
       const sec = Math.floor((diff % 60000) / 1000);
@@ -61,22 +50,19 @@ function startTimer() {
         waarschuwingGegeven = true;
 
         // Trillen (Android)
-        if (navigator.vibrate) navigator.vibrate([500,200,500]);
+        if (navigator.vibrate) navigator.vibrate([500, 200, 500]);
 
         // Visuele waarschuwing
         const timerDiv = document.getElementById("timer");
         timerDiv.style.color = "red";
         timerDiv.innerText += " (nog 5 minuten!)";
 
-        // Geluid afspelen
-        alarmAudio.play().catch(()=>{});
+        // Rustig geluid afspelen
+        alarmAudio.play().catch(()=>{}); // mocht browser blokkeren
       }
     }
   }, 1000);
 }
-
-// Eventlistener voor knop
-document.getElementById("startBtn").addEventListener("click", startTimer);
 </script>
 
 </body>
