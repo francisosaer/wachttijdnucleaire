@@ -83,7 +83,8 @@ function verstuurSMS() {
   const endTimestamp = eindTijd.getTime();
 
   // Link naar uw-wachttijd.html
-  const link = `${window.location.origin}/uw-wachttijd.html?end=${endTimestamp}`;
+  const link = `${window.location.origin}https://francisosaer.github.io/wachttijdnucleaire/uw-wachttijd.html?end=${endTimestamp}`;
+
 
   // SMS-link openen
   const smsLink = `sms:${phone}?body=Uw%20wachttijd:%20${encodeURIComponent(link)}`;
@@ -101,3 +102,4 @@ function verstuurSMS() {
 
 </body>
 </html>
+
