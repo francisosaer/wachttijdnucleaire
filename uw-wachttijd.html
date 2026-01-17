@@ -15,25 +15,30 @@
     margin-top: 20px;
     color: black;
   }
+  #info {
+    font-size: 16px;
+    margin-top: 20px;
+    color: gray;
+  }
 </style>
 </head>
 <body>
 
 <h1>Uw wachttijd</h1>
 <div id="timer">Laden…</div>
+<div id="info">Tik één keer op het scherm om geluid/trilling te activeren (alleen iOS).</div>
 
 <script>
 // Eindtijd ophalen uit URL
 const end = Number(new URLSearchParams(window.location.search).get("end"));
 let waarschuwingGegeven = false;
+let geluidGeactiveerd = false;
 
-// Rustig belgeluid (kort, vriendelijk)
+// Rustig belgeluid
 const alarmAudio = new Audio("https://actions.google.com/sounds/v1/alarms/medium_bell.ogg");
 
-// Start timer automatisch
-if (!end) {
-  document.getElementById("timer").innerText = "Geen wachttijd ingesteld";
-} else {
+// Timer functie
+function startTimer() {
   const interval = setInterval(() => {
     const diff = end - Date.now();
 
@@ -52,16 +57,32 @@ if (!end) {
         // Trillen (Android)
         if (navigator.vibrate) navigator.vibrate([500, 200, 500]);
 
-        // Visuele waarschuwing
+        // Rode tekst
         const timerDiv = document.getElementById("timer");
         timerDiv.style.color = "red";
         timerDiv.innerText += " (nog 5 minuten!)";
 
-        // Rustig geluid afspelen
-        alarmAudio.play().catch(()=>{}); // mocht browser blokkeren
+        // Geluid 2x kort
+        if (geluidGeactiveerd) {
+          alarmAudio.play().catch(()=>{});
+          setTimeout(()=>{ alarmAudio.play().catch(()=>{}); }, 800);
+        }
       }
     }
   }, 1000);
+}
+
+// Start timer automatisch
+if (!end) {
+  document.getElementById("timer").innerText = "Geen wachttijd ingesteld";
+} else {
+  // Eventlistener voor eerste tik (iOS vereist interactie voor geluid)
+  document.body.addEventListener('click', () => {
+    geluidGeactiveerd = true;
+  }, { once: true });
+
+  // Timer starten direct
+  startTimer();
 }
 </script>
 
