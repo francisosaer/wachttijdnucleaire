@@ -5,55 +5,99 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Wachttijd instellen</title>
 <style>
-body { font-family: Arial; padding:20px; max-width:400px; margin:auto; }
-input, button { font-size:18px; padding:10px; margin-top:10px; width:100%; }
-img { margin-top:15px; width:200px; height:200px; }
+  body {
+    font-family: Arial, sans-serif;
+    padding: 20px;
+    text-align: center;
+  }
+
+  h1 {
+    font-size: 24px;
+    margin-bottom: 20px;
+  }
+
+  label, input, button {
+    font-size: 18px;
+    margin: 10px 0;
+    display: block;
+    width: 80%;
+    max-width: 300px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  button {
+    padding: 10px 20px;
+    cursor: pointer;
+    margin-top: 10px;
+  }
+
+  #linkOutput {
+    margin-top: 20px;
+    word-break: break-all;
+    color: blue;
+  }
+
+  #qrcode canvas {
+    margin-top: 10px;
+  }
 </style>
 </head>
 <body>
 
 <h1>Wachttijd instellen</h1>
 
-<label>Terugkomtijd:</label>
-<input type="time" id="tijd">
+<label for="time">Terugkomtijd (HH:MM, 24u):</label>
+<input type="time" id="time" required>
 
-<button onclick="maakLink()">Genereer link</button>
+<label for="phone">Telefoonnummer patiënt (bv. 0496015833):</label>
+<input type="tel" id="phone" placeholder="0496015833" required>
 
-<p>Pati&euml;ntlink (kopieer voor WhatsApp of QR-code):</p>
-<input type="text" id="link" readonly>
+<button onclick="verstuurSMS()">Verstuur SMS + genereer QR-code</button>
 
-<p>QR-code:</p>
-<img id="qr" alt="QR-code verschijnt hier">
+<div id="linkOutput"></div>
+<div id="qrcode"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
 
 <script>
-function maakLink() {
-  const tijdInput = document.getElementById("tijd").value;
-  if (!tijdInput) { alert("Vul een geldige tijd in"); return; }
+function verstuurSMS() {
+  const timeInput = document.getElementById("time").value;
+  let phone = document.getElementById("phone").value.trim();
 
-  const [u, m] = tijdInput.split(":").map(Number);
-
-  const nu = new Date();
-  const eindtijd = new Date(
-    nu.getFullYear(), nu.getMonth(), nu.getDate(), u, m, 0
-  ).getTime();
-
-  if (eindtijd < Date.now()) {
-    alert("Deze tijd is al voorbij vandaag");
+  if (!timeInput || !phone) {
+    alert("Vul eerst terugkomtijd en telefoonnummer in!");
     return;
   }
 
-  const url = window.location.origin +
-    window.location.pathname.replace("wachttijd-instellen.html","") +
-    "uw-wachttijd.html?end=" + eindtijd;
+  // België: vervang eerste 0 door +32
+  if (phone.startsWith("0")) {
+    phone = "+32" + phone.substring(1);
+  }
 
-  document.getElementById("link").value = url;
+  // Eindtijd in milliseconden
+  const [hours, minutes] = timeInput.split(":").map(Number);
+  const now = new Date();
+  const eindTijd = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hours, minutes, 0);
+  if (eindTijd < now) eindTijd.setDate(eindTijd.getDate() + 1); // morgen als tijd al voorbij is
+  const endTimestamp = eindTijd.getTime();
 
-  document.getElementById("qr").src =
-    "https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=" +
-    encodeURIComponent(url);
+  // Link naar uw-wachttijd.html
+  const link = `${window.location.origin}/uw-wachttijd.html?end=${endTimestamp}`;
+
+  // SMS-link openen
+  const smsLink = `sms:${phone}?body=Uw%20wachttijd:%20${encodeURIComponent(link)}`;
+  window.location.href = smsLink;
+
+  // Toon link en genereer QR-code
+  document.getElementById("linkOutput").innerHTML = `
+    <p>Link: <a href="${link}" target="_blank">${link}</a></p>
+  `;
+  QRCode.toCanvas(document.getElementById('qrcode'), link, function (error) {
+    if (error) console.error(error);
+  });
 }
 </script>
 
 </body>
-
 </html>
