@@ -1,39 +1,25 @@
 <!DOCTYPE html>
 <html lang="nl">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Wachttijd instellen</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      padding: 20px;
-      max-width: 400px;
-      margin: auto;
-    }
-    input, button {
-      font-size: 18px;
-      padding: 10px;
-      margin-top: 10px;
-      width: 100%;
-    }
-    img {
-      margin-top: 15px;
-      width: 200px;
-      height: 200px;
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wachttijd instellen</title>
+<style>
+body { font-family: Arial; padding:20px; max-width:400px; margin:auto; }
+input, button { font-size:18px; padding:10px; margin-top:10px; width:100%; }
+img { margin-top:15px; width:200px; height:200px; }
+</style>
 </head>
 <body>
 
 <h1>Wachttijd instellen</h1>
 
-<label>Wachttijd (minuten)</label>
-<input type="number" id="minutes" value="15" min="1">
+<label>Terugkomtijd:</label>
+<input type="time" id="tijd">
 
 <button onclick="maakLink()">Genereer link</button>
 
-<p>Patiëntlink (kopieer en stuur via WhatsApp):</p>
+<p>Patiëntlink (kopieer voor WhatsApp of QR-code):</p>
 <input type="text" id="link" readonly>
 
 <p>QR-code:</p>
@@ -41,18 +27,24 @@
 
 <script>
 function maakLink() {
-  const minuten = Number(document.getElementById("minutes").value);
-  if (!minuten || minuten <= 0) {
-    alert("Vul een geldige wachttijd in.");
+  const tijdInput = document.getElementById("tijd").value;
+  if (!tijdInput) { alert("Vul een geldige tijd in"); return; }
+
+  const [u, m] = tijdInput.split(":").map(Number);
+
+  const nu = new Date();
+  const eindtijd = new Date(
+    nu.getFullYear(), nu.getMonth(), nu.getDate(), u, m, 0
+  ).getTime();
+
+  if (eindtijd < Date.now()) {
+    alert("Deze tijd is al voorbij vandaag");
     return;
   }
 
-  const end = Date.now() + minuten * 60000;
-
-  const url =
-    window.location.origin +
-    window.location.pathname.replace("wachttijd-instellen.html", "") +
-    "uw-wachttijd.html?end=" + end;
+  const url = window.location.origin +
+    window.location.pathname.replace("wachttijd-instellen.html","") +
+    "uw-wachttijd.html?end=" + eindtijd;
 
   document.getElementById("link").value = url;
 

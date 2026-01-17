@@ -1,20 +1,13 @@
 <!DOCTYPE html>
 <html lang="nl">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Uw wachttijd</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      text-align: center;
-      padding: 40px;
-    }
-    #timer {
-      font-size: 36px;
-      margin-top: 20px;
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Uw wachttijd</title>
+<style>
+body { font-family: Arial; text-align:center; padding:40px; }
+#timer { font-size:36px; margin-top:20px; }
+</style>
 </head>
 <body>
 
@@ -23,22 +16,17 @@
 
 <script>
 const end = Number(new URLSearchParams(window.location.search).get("end"));
-
 if (!end) {
-  document.getElementById("timer").innerText =
-    "Geen wachttijd ingesteld";
+  document.getElementById("timer").innerText = "Geen wachttijd ingesteld";
 } else {
   setInterval(() => {
     const diff = end - Date.now();
-
     if (diff <= 0) {
-      document.getElementById("timer").innerText =
-        "U bent aan de beurt";
+      document.getElementById("timer").innerText = "U bent aan de beurt";
     } else {
       const min = Math.floor(diff / 60000);
       const sec = Math.floor((diff % 60000) / 1000);
-      document.getElementById("timer").innerText =
-        `${min} min ${sec} sec`;
+      document.getElementById("timer").innerText = `${min} min ${sec} sec`;
     }
   }, 1000);
 }
