@@ -26,18 +26,24 @@
 
 <h1>Uw wachttijd</h1>
 <div id="timer">Laden…</div>
-<div id="info">Tik één keer op het scherm om geluid/trilling te activeren (alleen iOS).</div>
+<div id="info">Op iOS: tik één keer op het scherm om geluid/trilling te activeren.</div>
 
 <script>
-// Eindtijd ophalen uit URL
+// Eindtijd uit URL
 const end = Number(new URLSearchParams(window.location.search).get("end"));
 let waarschuwingGegeven = false;
 let geluidGeactiveerd = false;
 
-// Rustig belgeluid
-const alarmAudio = new Audio("https://actions.google.com/sounds/v1/alarms/medium_bell.ogg");
+// Rustig belletje (medium volume, kort)
+const alarmAudio = new Audio("https://actions.google.com/sounds/v1/alarms/bell_clock.ogg");
+alarmAudio.load(); // preload zodat autoplay makkelijker werkt
 
-// Timer functie
+// Voor iOS/Android: probeer alvast te “unlocken” bij laden
+document.addEventListener('DOMContentLoaded', () => {
+  alarmAudio.play().then(()=>{ alarmAudio.pause(); alarmAudio.currentTime = 0; }).catch(()=>{});
+});
+
+// Timer starten
 function startTimer() {
   const interval = setInterval(() => {
     const diff = end - Date.now();
@@ -54,15 +60,15 @@ function startTimer() {
       if (!waarschuwingGegeven && diff <= 5 * 60000) {
         waarschuwingGegeven = true;
 
-        // Trillen (Android)
-        if (navigator.vibrate) navigator.vibrate([500, 200, 500]);
+        // Trillen Android
+        if (navigator.vibrate) navigator.vibrate([500,200,500]);
 
-        // Rode tekst
+        // Rood maken
         const timerDiv = document.getElementById("timer");
         timerDiv.style.color = "red";
         timerDiv.innerText += " (nog 5 minuten!)";
 
-        // Geluid 2x kort
+        // Rustig belletje 2x
         if (geluidGeactiveerd) {
           alarmAudio.play().catch(()=>{});
           setTimeout(()=>{ alarmAudio.play().catch(()=>{}); }, 800);
@@ -72,16 +78,13 @@ function startTimer() {
   }, 1000);
 }
 
-// Start timer automatisch
+// iOS: eerste tik op pagina om geluid toe te staan
+document.body.addEventListener('click', () => { geluidGeactiveerd = true; }, { once: true });
+
+// start timer automatisch
 if (!end) {
   document.getElementById("timer").innerText = "Geen wachttijd ingesteld";
 } else {
-  // Eventlistener voor eerste tik (iOS vereist interactie voor geluid)
-  document.body.addEventListener('click', () => {
-    geluidGeactiveerd = true;
-  }, { once: true });
-
-  // Timer starten direct
   startTimer();
 }
 </script>
