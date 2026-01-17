@@ -3,36 +3,61 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Uw wachttijd voor uw onderzoek</title>
+<title>Uw wachttijd</title>
 <style>
-body { font-family: Arial; text-align:center; padding:40px; }
-#timer { font-size:36px; margin-top:20px; }
+  body {
+    font-family: Arial, sans-serif;
+    text-align: center;
+    padding: 40px;
+  }
+  #timer {
+    font-size: 36px;
+    margin-top: 20px;
+    color: black;
+  }
 </style>
 </head>
 <body>
 
-<h1>Uw wachttijd voor uw onderzoek</h1>
+<h1>Uw wachttijd</h1>
 <div id="timer">Laden…</div>
 
 <script>
+// Eindtijd ophalen uit URL
 const end = Number(new URLSearchParams(window.location.search).get("end"));
+
+// Variabele om waarschuwing slechts 1 keer te geven
+let waarschuwingGegeven = false;
+
 if (!end) {
   document.getElementById("timer").innerText = "Geen wachttijd ingesteld";
 } else {
-  setInterval(() => {
+  const interval = setInterval(() => {
     const diff = end - Date.now();
+
     if (diff <= 0) {
       document.getElementById("timer").innerText = "U bent aan de beurt";
+      clearInterval(interval); // Stop timer
     } else {
       const min = Math.floor(diff / 60000);
       const sec = Math.floor((diff % 60000) / 1000);
       document.getElementById("timer").innerText = `${min} min ${sec} sec`;
+
+      // 5-minuten waarschuwing
+      if (!waarschuwingGegeven && diff <= 5 * 60000) {
+        waarschuwingGegeven = true;
+
+        // Trillen op smartphone (0,5 seconde)
+        if (navigator.vibrate) navigator.vibrate(500);
+
+        // Extra visuele waarschuwing
+        document.getElementById("timer").style.color = "red";
+        document.getElementById("timer").innerText += " (nog 5 minuten!)";
+      }
     }
   }, 1000);
 }
 </script>
 
 </body>
-
 </html>
-
