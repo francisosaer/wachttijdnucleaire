@@ -20,10 +20,10 @@ button { padding: 10px 20px; cursor: pointer; margin-top: 10px; }
 <label for="time">Terugkomtijd (HH:MM, 24u):</label>
 <input type="time" id="time" required>
 
-<label for="patient">Patiënt naam/nummer (optioneel):</label>
-<input type="text" id="patient" placeholder="bijv. Jan Jansen">
+<label for="phone">Telefoonnummer patiënt:</label>
+<input type="tel" id="phone" value="04">
 
-<button onclick="genereerLink()">Genereer persoonlijke link</button>
+<button onclick="verstuurLink()">Genereer link, QR-code en SMS</button>
 
 <div id="linkOutput"></div>
 <div id="qrcode"></div>
@@ -31,13 +31,23 @@ button { padding: 10px 20px; cursor: pointer; margin-top: 10px; }
 <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
 
 <script>
-function genereerLink() {
+function verstuurLink() {
   const timeInput = document.getElementById("time").value;
-  const patient = document.getElementById("patient").value.trim();
+  let phone = document.getElementById("phone").value.trim();
 
   if (!timeInput) {
     alert("Vul eerst terugkomtijd in!");
     return;
+  }
+
+  if (!phone || phone.length < 3) { 
+    alert("Vul een geldig telefoonnummer in (begint met 04).");
+    return;
+  }
+
+  // Zet Belgisch nummer om naar +32
+  if (phone.startsWith("0")) {
+    phone = "+32" + phone.substring(1);
   }
 
   // Eindtijd berekenen
@@ -50,36 +60,27 @@ function genereerLink() {
   // Dynamische link naar uw-wachttijd.html
   const currentPath = window.location.pathname;
   const basePath = currentPath.substring(0, currentPath.lastIndexOf("/") + 1);
-  let link = `${window.location.origin}${basePath}uw-wachttijd.html?end=${endTimestamp}`;
-  
-  // Voeg optioneel patiëntnaam toe in de URL (niet zichtbaar in timer, enkel voor administratie)
-  if (patient) {
-    const encoded = encodeURIComponent(patient);
-    link += `&patient=${encoded}`;
-  }
+  const link = `${window.location.origin}${basePath}uw-wachttijd.html?end=${endTimestamp}`;
 
   // Toon link
-  document.getElementById("linkOutput").innerHTML = `
-    <p>Persoonlijke link: <a href="${link}" target="_blank">${link}</a></p>
-    <button onclick="kopieerLink()">Kopieer link</button>
-  `;
+  document.getElementById("linkOutput").innerHTML = `<p>Link: <a href="${link}" target="_blank">${link}</a></p>`;
 
   // QR-code genereren
   const qrDiv = document.getElementById('qrcode');
-  qrDiv.innerHTML = "";
+  qrDiv.innerHTML = ""; // verwijder oude QR
   const canvas = document.createElement('canvas');
   qrDiv.appendChild(canvas);
   QRCode.toCanvas(canvas, link, function(error) {
-    if (error) console.error(error);
+    if (error) {
+      console.error("QR-code fout:", error);
+      alert("QR-code kon niet worden gegenereerd!");
+    }
   });
-}
 
-function kopieerLink() {
-  const linkEl = document.querySelector("#linkOutput a");
-  if (!linkEl) return;
-  navigator.clipboard.writeText(linkEl.href).then(() => {
-    alert("Link gekopieerd naar klembord!");
-  });
+  // SMS openen
+  const smsBody = encodeURIComponent(`Uw wachttijd is ingesteld. Bekijk de timer hier: ${link}`);
+  const smsLink = `sms:${phone}?body=${smsBody}`;
+  window.location.href = smsLink;
 }
 </script>
 
