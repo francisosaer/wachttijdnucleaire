@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Uw wachttijd</title>
+<style>
+body { font-family: Arial, sans-serif; text-align:center; padding:40px; }
+h1 { margin-bottom:20px; }
+#timer { font-size:36px; margin-top:20px; }
+#bericht { font-size:20px; margin-top:10px; color:green; }
+</style>
+</head>
+<body>
+
+<h1>Uw wachttijd</h1>
+<div id="timer">Laden…</div>
+<p id="bericht"></p>
+
+<script>
+// Haal eindtijd op uit URL-parameter
+const end = Number(new URLSearchParams(window.location.search).get("end"));
+
+if (!end || isNaN(end)) {
+  document.getElementById("timer").innerText = "Geen wachttijd ingesteld";
+} else {
+  function updateTimer() {
+    const diff = end - Date.now();
+    if (diff <= 0) {
+      document.getElementById("timer").innerText = "U bent aan de beurt";
+      document.getElementById("bericht").innerText = "Gelieve naar de balie te komen.";
+      clearInterval(interval);
+      return;
+    }
+
+    const uren = Math.floor(diff / 3600000);
+    const minuten = Math.floor((diff % 3600000) / 60000);
+    const seconden = Math.floor((diff % 60000) / 1000);
+
+    let tekst = "";
+    if (uren > 0) tekst += uren + "u ";
+    tekst += minuten + "m " + seconden + "s";
+
+    document.getElementById("timer").innerText = tekst;
+  }
+
+  const interval = setInterval(updateTimer, 1000);
+  updateTimer();
+}
+</script>
+
+</body>
+</html>
