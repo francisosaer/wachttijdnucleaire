@@ -46,7 +46,7 @@ button {
 <input type="time" id="time" required>
 
 <label for="phone">Telefoonnummer patiënt (bv. 0496015833):</label>
-<input type="tel" id="phone" placeholder="0496015833" required>
+<input type="tel" id="phone" placeholder="0496015833" value="04">
 
 <button onclick="verstuurLink()">Genereer link, QR-code en SMS</button>
 
@@ -60,8 +60,13 @@ function verstuurLink() {
   const timeInput = document.getElementById("time").value;
   let phone = document.getElementById("phone").value.trim();
 
-  if (!timeInput || !phone) {
-    alert("Vul eerst terugkomtijd en telefoonnummer in!");
+  if (!timeInput) {
+    alert("Vul eerst terugkomtijd in!");
+    return;
+  }
+
+  if (!phone || phone.length < 10) {
+    alert("Vul een geldig telefoonnummer in (begint met 04).");
     return;
   }
 
@@ -87,9 +92,9 @@ function verstuurLink() {
     <p>Link: <a href="${link}" target="_blank">${link}</a></p>
   `;
 
-  // QR-code genereren
+  // Genereer QR-code
   const qrDiv = document.getElementById('qrcode');
-  qrDiv.innerHTML = ""; // oude QR-code verwijderen
+  qrDiv.innerHTML = ""; // oude QR verwijderen
   const canvas = document.createElement('canvas');
   qrDiv.appendChild(canvas);
   QRCode.toCanvas(canvas, link, function(error) {
