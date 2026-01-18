@@ -8,7 +8,7 @@
 body {
   font-family: Arial, sans-serif;
   padding: 20px;
-  max-width: 400px;
+  max-width: 420px;
   margin: auto;
   text-align: center;
 }
@@ -19,7 +19,8 @@ label {
   display: block;
 }
 
-input[type="time"] {
+input[type="time"],
+input[type="tel"] {
   font-size: 18px;
   padding: 10px;
   width: 100%;
@@ -80,7 +81,10 @@ img {
   Wachtzaal
 </div>
 
-<button onclick="genereerLink()">Genereer link</button>
+<label>Telefoonnummer patiënt</label>
+<input type="tel" id="phone" value="04" inputmode="numeric">
+
+<button onclick="genereerEnVerstuur()">Verstuur SMS + genereer QR</button>
 
 <input type="text" id="link" readonly>
 <img id="qr">
@@ -94,30 +98,52 @@ function selectType(type) {
   document.getElementById(type).classList.add('selected');
 }
 
-function genereerLink() {
+function genereerEnVerstuur() {
   const tijd = document.getElementById("tijd").value;
+  let phone = document.getElementById("phone").value.trim();
+
   if (!tijd || !gekozenType) {
-    alert("Kies een tijd en een type onderzoek");
+    alert("Kies tijd en type onderzoek");
     return;
   }
 
+  if (!phone.startsWith("04") || phone.length < 9) {
+    alert("Vul een geldig Belgisch gsm-nummer in");
+    return;
+  }
+
+  // Belgische nummer omzetting
+  phone = "+32" + phone.substring(1);
+
+  // Tijd berekenen
   const [u, m] = tijd.split(":").map(Number);
   const nu = new Date();
   let eind = new Date(nu.getFullYear(), nu.getMonth(), nu.getDate(), u, m, 0);
   if (eind < nu) eind.setDate(eind.getDate() + 1);
-
   const endMs = eind.getTime();
 
+  // Link bouwen
   const base =
     window.location.origin +
     window.location.pathname.replace("wachttijd-instellen.html", "");
 
-  const url = `${base}uw-wachttijd.html?end=${endMs}&type=${gekozenType}`;
+  const url =
+    `${base}uw-wachttijd.html?end=${endMs}&type=${gekozenType}`;
 
+  // Toon link
   document.getElementById("link").value = url;
+
+  // QR-code
   document.getElementById("qr").src =
     "https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=" +
     encodeURIComponent(url);
+
+  // SMS openen (werkt op smartphone)
+  const smsLink =
+    `sms:${phone}?body=` +
+    encodeURIComponent("Uw wachttijd: " + url);
+
+  window.location.href = smsLink;
 }
 </script>
 
