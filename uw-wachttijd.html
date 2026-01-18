@@ -21,7 +21,6 @@ h1 {
 #message {
   font-size: 20px;
   margin-top: 20px;
-  color: #333;
   white-space: pre-line;
 }
 #startBtn {
@@ -34,38 +33,44 @@ h1 {
 </head>
 <body>
 
-<h1>Uw wachttijd</h1>
+<h1 id="title">Uw wachttijd</h1>
 
-<button id="startBtn">Start timer (iOS: activeert trilling)</button>
+<button id="startBtn">Start timer (iOS)</button>
 
 <div id="timer">Laden…</div>
-<div id="message">Gelieve enkele glazen water te drinken voor een optimaal resultaat.</div>
+<div id="message"></div>
 
 <script>
-const endTime = Number(new URLSearchParams(window.location.search).get("end"));
+const params = new URLSearchParams(window.location.search);
+const endTime = Number(params.get("end"));
+const type = params.get("type");
 
 const timerEl = document.getElementById("timer");
 const messageEl = document.getElementById("message");
 const startBtn = document.getElementById("startBtn");
+const titleEl = document.getElementById("title");
 
 let waarschuwingGegeven = false;
 let geluidGeactiveerd = false;
 let timerGestart = false;
+
+// Titel & startboodschap
+if (type === "botscan") {
+  titleEl.innerText = "Uw wachttijd – Botscan";
+  messageEl.innerText = "Gelieve enkele glazen water te drinken.";
+} else if (type === "schildklier") {
+  titleEl.innerText = "Uw wachttijd – Schildklierscan";
+  messageEl.innerText = "Gelieve plaats te nemen in de wachtzaal.";
+}
 
 // Geluid
 const alarmAudio = new Audio(
   "https://actions.google.com/sounds/v1/alarms/medium_bell.ogg"
 );
 
-// Timer start automatisch
 function startTimer() {
   if (timerGestart) return;
   timerGestart = true;
-
-  // Startboodschap verdwijnt na 2 minuten
-  setTimeout(() => {
-    messageEl.innerText = "";
-  }, 2 * 60 * 1000);
 
   const interval = setInterval(() => {
     const diff = endTime - Date.now();
@@ -74,10 +79,8 @@ function startTimer() {
       timerEl.innerText = "U bent aan de beurt";
       timerEl.style.color = "#d9534f";
       messageEl.innerText = "";
-
       if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
       if (geluidGeactiveerd) alarmAudio.play().catch(()=>{});
-
       clearInterval(interval);
       return;
     }
@@ -86,20 +89,20 @@ function startTimer() {
     const sec = Math.floor((diff % 60000) / 1000);
     timerEl.innerText = `${min} min ${sec} sec`;
 
-    // 5-minuten waarschuwing
     if (!waarschuwingGegeven && diff <= 5 * 60000) {
       waarschuwingGegeven = true;
-
       timerEl.style.color = "red";
 
-      messageEl.innerText =
-        "U mag zich begeven naar wachtzaal D0W3.\n" +
-        "Gelieve net voor het onderzoek uw blaas te ledigen.";
-
-      if (navigator.vibrate) {
-        navigator.vibrate([500, 200, 500]);
+      if (type === "botscan") {
+        messageEl.innerText =
+          "U mag zich begeven naar wachtzaal D0W3.\n" +
+          "Gelieve net voor het onderzoek uw blaas te ledigen.";
+      } else if (type === "schildklier") {
+        messageEl.innerText =
+          "U mag zich begeven naar wachtzaal D0W3.";
       }
 
+      if (navigator.vibrate) navigator.vibrate([500, 200, 500]);
       if (geluidGeactiveerd) {
         alarmAudio.play().catch(()=>{});
         setTimeout(() => alarmAudio.play().catch(()=>{}), 800);
@@ -108,20 +111,19 @@ function startTimer() {
   }, 1000);
 }
 
-// Start timer altijd
+// Start altijd automatisch
 if (!endTime) {
   timerEl.innerText = "Geen wachttijd ingesteld";
 } else {
   startTimer();
 }
 
-// iOS: klik nodig om trilling/geluid toe te laten
+// iOS activatie
 startBtn.addEventListener("click", () => {
   geluidGeactiveerd = true;
   startBtn.style.display = "none";
 });
 
-// Extra: eerste tik ergens activeert geluid (Android/iOS)
 document.body.addEventListener("click", () => {
   geluidGeactiveerd = true;
 }, { once: true });
