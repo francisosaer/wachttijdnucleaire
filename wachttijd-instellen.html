@@ -10,12 +10,10 @@ body {
   padding: 20px;
   text-align: center;
 }
-
 h1 {
   font-size: 24px;
   margin-bottom: 20px;
 }
-
 label, input, button {
   font-size: 18px;
   margin: 10px 0;
@@ -25,19 +23,16 @@ label, input, button {
   margin-left: auto;
   margin-right: auto;
 }
-
 button {
   padding: 10px 20px;
   cursor: pointer;
   margin-top: 10px;
 }
-
 #linkOutput {
   margin-top: 20px;
   word-break: break-word;
   color: blue;
 }
-
 #qrcode canvas {
   margin-top: 10px;
 }
@@ -82,8 +77,12 @@ function verstuurLink() {
   if (eindTijd < now) eindTijd.setDate(eindTijd.getDate() + 1); // morgen als tijd al voorbij is
   const endTimestamp = eindTijd.getTime();
 
-  // URL naar uw-wachttijd.html
-  const link = `${window.location.origin}/uw-wachttijd.html?end=${endTimestamp}`;
+  // Dynamische link naar uw-wachttijd.html
+  // window.location.pathname geeft het pad van deze file
+  // Zo werkt het correct ongeacht of het in root of submap staat
+  const currentPath = window.location.pathname;
+  const basePath = currentPath.substring(0, currentPath.lastIndexOf("/") + 1);
+  const link = `${window.location.origin}${basePath}uw-wachttijd.html?end=${endTimestamp}`;
 
   // Toon de link
   document.getElementById("linkOutput").innerHTML = `
