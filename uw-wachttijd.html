@@ -5,46 +5,67 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Uw wachttijd</title>
 <style>
-body { font-family: Arial, sans-serif; text-align: center; padding: 40px; }
-h1 { font-size: 28px; margin-bottom: 20px; }
-#timer { font-size: 48px; margin-top: 20px; color: black; }
-#message { font-size: 20px; margin-top: 20px; color: #333; white-space: pre-line; }
-#startBtn { font-size: 20px; padding: 10px 20px; margin-top: 20px; cursor: pointer; }
+body {
+  font-family: Arial, sans-serif;
+  text-align: center;
+  padding: 40px;
+}
+h1 {
+  font-size: 28px;
+}
+#timer {
+  font-size: 48px;
+  margin-top: 20px;
+  color: black;
+}
+#message {
+  font-size: 20px;
+  margin-top: 20px;
+  color: #333;
+  white-space: pre-line;
+}
+#startBtn {
+  font-size: 20px;
+  padding: 10px 20px;
+  margin-top: 20px;
+  cursor: pointer;
+}
 </style>
 </head>
 <body>
 
 <h1>Uw wachttijd</h1>
 
-<!-- Start knop voor iOS -->
-<button id="startBtn">Start timer (iOS vereist voor geluid/trilling)</button>
+<button id="startBtn">Start timer (iOS: activeert trilling)</button>
 
 <div id="timer">Laden…</div>
 <div id="message">Gelieve enkele glazen water te drinken voor een optimaal resultaat.</div>
 
 <script>
-// Timer einde
-const endParam = new URLSearchParams(window.location.search).get("end");
-const endTime = Number(endParam);
+const endTime = Number(new URLSearchParams(window.location.search).get("end"));
 
 const timerEl = document.getElementById("timer");
 const messageEl = document.getElementById("message");
 const startBtn = document.getElementById("startBtn");
 
-let alertShown = false;
-let timerStarted = false;
+let waarschuwingGegeven = false;
 let geluidGeactiveerd = false;
+let timerGestart = false;
 
-// Geluid bij waarschuwing
-const alarmAudio = new Audio("https://actions.google.com/sounds/v1/alarms/medium_bell.ogg");
+// Geluid
+const alarmAudio = new Audio(
+  "https://actions.google.com/sounds/v1/alarms/medium_bell.ogg"
+);
 
-// Timer functie
+// Timer start automatisch
 function startTimer() {
-  if (timerStarted) return;
-  timerStarted = true;
+  if (timerGestart) return;
+  timerGestart = true;
 
-  // 2 minuten boodschap verdwijnt automatisch
-  setTimeout(() => { messageEl.innerText = ""; }, 2*60*1000);
+  // Startboodschap verdwijnt na 2 minuten
+  setTimeout(() => {
+    messageEl.innerText = "";
+  }, 2 * 60 * 1000);
 
   const interval = setInterval(() => {
     const diff = endTime - Date.now();
@@ -53,53 +74,57 @@ function startTimer() {
       timerEl.innerText = "U bent aan de beurt";
       timerEl.style.color = "#d9534f";
       messageEl.innerText = "";
-      clearInterval(interval);
 
-      // Trilling + geluid
-      if (navigator.vibrate) navigator.vibrate([200,100,200]);
+      if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
       if (geluidGeactiveerd) alarmAudio.play().catch(()=>{});
-    } else {
-      const hours = Math.floor(diff / 3600000);
-      const minutes = Math.floor((diff % 3600000) / 60000);
-      const seconds = Math.floor((diff % 60000) / 1000);
-      timerEl.innerText = (hours>0 ? hours+"u ":"") + minutes + "m " + seconds + "s";
 
-      // 5-minuten waarschuwing
-      if (!alertShown && diff <= 5*60000) {
-        alertShown = true;
-        timerEl.style.color = "red";
-        messageEl.innerText = "U mag zich begeven naar wachtzaal D0W3.\nGelieve uw blaas kort voor het onderzoek te legen voor een optimaal resultaat.";
+      clearInterval(interval);
+      return;
+    }
 
-        // Vibratie
-        if (navigator.vibrate) navigator.vibrate([500,200,500]);
+    const min = Math.floor(diff / 60000);
+    const sec = Math.floor((diff % 60000) / 1000);
+    timerEl.innerText = `${min} min ${sec} sec`;
 
-        // Geluid 2x
-        if (geluidGeactiveerd) {
-          alarmAudio.play().catch(()=>{});
-          setTimeout(()=>alarmAudio.play().catch(()=>{}), 800);
-        }
+    // 5-minuten waarschuwing
+    if (!waarschuwingGegeven && diff <= 5 * 60000) {
+      waarschuwingGegeven = true;
 
-        alert("U mag zich begeven naar wachtzaal D0W3.\nGelieve uw blaas kort voor het onderzoek te legen voor een optimaal resultaat.");
+      timerEl.style.color = "red";
+
+      messageEl.innerText =
+        "U mag zich begeven naar wachtzaal D0W3.\n" +
+        "Gelieve net voor het onderzoek uw blaas te ledigen.";
+
+      if (navigator.vibrate) {
+        navigator.vibrate([500, 200, 500]);
+      }
+
+      if (geluidGeactiveerd) {
+        alarmAudio.play().catch(()=>{});
+        setTimeout(() => alarmAudio.play().catch(()=>{}), 800);
       }
     }
   }, 1000);
 }
 
-// Timer start automatisch bij laden
+// Start timer altijd
 if (!endTime) {
   timerEl.innerText = "Geen wachttijd ingesteld";
 } else {
   startTimer();
 }
 
-// Start-knop activeert geluid en vibratie voor iOS
+// iOS: klik nodig om trilling/geluid toe te laten
 startBtn.addEventListener("click", () => {
   geluidGeactiveerd = true;
-  startBtn.style.display = "none"; // knop verdwijnt
+  startBtn.style.display = "none";
 });
 
-// Extra body klik om geluid voor Android/iOS te activeren
-document.body.addEventListener("click", () => { geluidGeactiveerd = true; }, { once: true });
+// Extra: eerste tik ergens activeert geluid (Android/iOS)
+document.body.addEventListener("click", () => {
+  geluidGeactiveerd = true;
+}, { once: true });
 </script>
 
 </body>
