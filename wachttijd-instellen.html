@@ -77,28 +77,29 @@ function verstuurLink() {
   if (eindTijd < now) eindTijd.setDate(eindTijd.getDate() + 1); // morgen als tijd al voorbij is
   const endTimestamp = eindTijd.getTime();
 
-  // Dynamische link naar uw-wachttijd.html
-  // window.location.pathname geeft het pad van deze file
-  // Zo werkt het correct ongeacht of het in root of submap staat
+  // Dynamische link naar uw-wachttijd.html (werkt ook in submappen)
   const currentPath = window.location.pathname;
   const basePath = currentPath.substring(0, currentPath.lastIndexOf("/") + 1);
   const link = `${window.location.origin}${basePath}uw-wachttijd.html?end=${endTimestamp}`;
 
-  // Toon de link
+  // Toon link
   document.getElementById("linkOutput").innerHTML = `
     <p>Link: <a href="${link}" target="_blank">${link}</a></p>
   `;
 
-  // Genereer QR-code
-  document.getElementById('qrcode').innerHTML = ""; // oude QR-code verwijderen
-  QRCode.toCanvas(document.getElementById('qrcode'), link, function (error) {
-    if (error) console.error(error);
+  // QR-code genereren
+  const qrDiv = document.getElementById('qrcode');
+  qrDiv.innerHTML = ""; // oude QR-code verwijderen
+  const canvas = document.createElement('canvas');
+  qrDiv.appendChild(canvas);
+  QRCode.toCanvas(canvas, link, function(error) {
+    if(error) console.error("QR-code fout:", error);
   });
 
-  // SMS openen
+  // SMS openen op mobiel
   const smsBody = encodeURIComponent(`Uw wachttijd is ingesteld. Bekijk de timer hier: ${link}`);
   const smsLink = `sms:${phone}?body=${smsBody}`;
-  window.location.href = smsLink; // opent SMS-app op mobiel
+  window.location.href = smsLink;
 }
 </script>
 
