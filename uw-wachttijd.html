@@ -7,7 +7,7 @@
 <style>
 body { font-family: Arial, sans-serif; text-align: center; padding: 40px; }
 h1 { font-size: 28px; margin-bottom: 20px; }
-#timer { font-size: 48px; margin-top: 20px; color: #d9534f; }
+#timer { font-size: 48px; margin-top: 20px; color: black; }
 #message { font-size: 20px; margin-top: 30px; color: #333; white-space: pre-line; }
 </style>
 </head>
@@ -15,7 +15,7 @@ h1 { font-size: 28px; margin-bottom: 20px; }
 
 <h1>Uw wachttijd</h1>
 <div id="timer">Laden…</div>
-<div id="message"></div>
+<div id="message">Gelieve enkele glazen water te drinken voor een optimaal resultaat.</div>
 
 <script>
 const endParam = new URLSearchParams(window.location.search).get("end");
@@ -28,6 +28,11 @@ if (!endTime) {
   const messageEl = document.getElementById("message");
   let alertShown = false;
 
+  // Tijdelijke boodschap verdwijnt na 2 minuten
+  setTimeout(() => {
+    messageEl.innerText = "";
+  }, 2 * 60 * 1000); // 2 minuten in milliseconden
+
   const interval = setInterval(() => {
     const now = Date.now();
     const diff = endTime - now;
@@ -37,7 +42,6 @@ if (!endTime) {
       timerEl.style.color = "#d9534f";
       messageEl.innerText = "";
       clearInterval(interval);
-      // Korte vibratie bij tijd voorbij
       if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
     } else {
       const hours = Math.floor(diff / 3600000);
@@ -50,15 +54,13 @@ if (!endTime) {
       // 5 minuten waarschuwing
       if (diff <= 5*60*1000 && !alertShown) {
         alertShown = true;
-        timerEl.style.color = "red"; // timer wordt rood
+        timerEl.style.color = "red";
         messageEl.innerText = "U mag zich begeven naar wachtzaal D0W3.\nGelieve uw blaas kort voor het onderzoek te legen voor een optimaal resultaat.";
 
-        // Trilling (Android en Safari iOS)
         if (navigator.vibrate) {
           navigator.vibrate([500, 200, 500]);
         }
 
-        // Alert popup
         alert("U mag zich begeven naar wachtzaal D0W3.\nGelieve uw blaas kort voor het onderzoek te legen voor een optimaal resultaat.");
       }
     }
