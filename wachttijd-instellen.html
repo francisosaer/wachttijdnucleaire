@@ -1,105 +1,65 @@
 <!DOCTYPE html>
 <html lang="nl">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Wachttijd instellen</title>
-<style>
-  body {
-    font-family: Arial, sans-serif;
-    padding: 20px;
-    text-align: center;
-  }
-
-  h1 {
-    font-size: 24px;
-    margin-bottom: 20px;
-  }
-
-  label, input, button {
-    font-size: 18px;
-    margin: 10px 0;
-    display: block;
-    width: 80%;
-    max-width: 300px;
-    margin-left: auto;
-    margin-right: auto;
-  }
-
-  button {
-    padding: 10px 20px;
-    cursor: pointer;
-    margin-top: 10px;
-  }
-
-  #linkOutput {
-    margin-top: 20px;
-    word-break: break-all;
-    color: blue;
-  }
-
-  #qrcode canvas {
-    margin-top: 10px;
-  }
-</style>
+  <meta charset="UTF-8">
+  <title>Wachttijd instellen</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      max-width: 500px;
+      margin: auto;
+    }
+    h1 {
+      font-size: 1.6em;
+    }
+    input, button {
+      width: 100%;
+      padding: 12px;
+      font-size: 1.1em;
+      margin-top: 10px;
+    }
+    #link {
+      margin-top: 15px;
+      word-break: break-all;
+      font-size: 0.95em;
+    }
+  </style>
 </head>
 <body>
 
 <h1>Wachttijd instellen</h1>
 
-<label for="time">Terugkomtijd (HH:MM, 24u):</label>
-<input type="time" id="time" required>
+<label>
+  Wachttijd in minuten:
+  <input type="number" id="minutes" placeholder="bv. 45">
+</label>
 
-<label for="phone">Telefoonnummer patiÃ«nt (bv. 0496015833):</label>
-<input type="tel" id="phone" placeholder="0496015833" required>
+<button onclick="genereerLink()">Genereer patiënt-link</button>
 
-<button onclick="verstuurSMS()">Verstuur SMS + genereer QR-code</button>
-
-<div id="linkOutput"></div>
-<div id="qrcode"></div>
-
-<script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
+<div id="link"></div>
 
 <script>
-function verstuurSMS() {
-  const timeInput = document.getElementById("time").value;
-  let phone = document.getElementById("phone").value.trim();
-
-  if (!timeInput || !phone) {
-    alert("Vul eerst terugkomtijd en telefoonnummer in!");
+function genereerLink() {
+  const minutes = document.getElementById("minutes").value;
+  if (!minutes || minutes <= 0) {
+    alert("Geef een geldige wachttijd in minuten in.");
     return;
   }
 
-  // BelgiÃ«: vervang eerste 0 door +32
-  if (phone.startsWith("0")) {
-    phone = "+32" + phone.substring(1);
-  }
+  const endTimestamp = Date.now() + minutes * 60000;
 
-  // Eindtijd in milliseconden
-  const [hours, minutes] = timeInput.split(":").map(Number);
-  const now = new Date();
-  const eindTijd = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hours, minutes, 0);
-  if (eindTijd < now) eindTijd.setDate(eindTijd.getDate() + 1); // morgen als tijd al voorbij is
-  const endTimestamp = eindTijd.getTime();
+  const link =
+    `https://francisosaer.github.io/wachttijdnucleaire/uw-wachttijd.html?end=${endTimestamp}`;
 
-  // Link naar uw-wachttijd.html
-  const link = `${window.location.origin}https://francisosaer.github.io/wachttijdnucleaire/uw-wachttijd.html?end=${endTimestamp}`;
-
-
-  // SMS-link openen
-  const smsLink = `sms:${phone}?body=Uw%20wachttijd:%20${encodeURIComponent(link)}`;
-  window.location.href = smsLink;
-
-  // Toon link en genereer QR-code
-  document.getElementById("linkOutput").innerHTML = `
-    <p>Link: <a href="${link}" target="_blank">${link}</a></p>
+  document.getElementById("link").innerHTML = `
+    <strong>Patiënt-link:</strong><br>
+    <a href="${link}" target="_blank">${link}</a><br><br>
+    ?? Kopieer deze link of maak er een QR-code van
   `;
-  QRCode.toCanvas(document.getElementById('qrcode'), link, function (error) {
-    if (error) console.error(error);
-  });
 }
 </script>
 
 </body>
 </html>
-
