@@ -5,60 +5,101 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Wachttijd instellen</title>
 <style>
-body { font-family: Arial, sans-serif; padding:20px; max-width:400px; margin:auto; }
-h1 { text-align:center; }
-input, button { font-size:18px; padding:10px; margin-top:10px; width:100%; }
-img { margin-top:15px; width:200px; height:200px; display:block; margin-left:auto; margin-right:auto; }
+body {
+  font-family: Arial, sans-serif;
+  padding: 20px;
+  text-align: center;
+}
+
+h1 {
+  font-size: 24px;
+  margin-bottom: 20px;
+}
+
+label, input, button {
+  font-size: 18px;
+  margin: 10px 0;
+  display: block;
+  width: 80%;
+  max-width: 300px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+button {
+  padding: 10px 20px;
+  cursor: pointer;
+  margin-top: 10px;
+}
+
+#linkOutput {
+  margin-top: 20px;
+  word-break: break-word;
+  color: blue;
+}
+
+#qrcode canvas {
+  margin-top: 10px;
+}
 </style>
 </head>
 <body>
 
 <h1>Wachttijd instellen</h1>
 
-<label for="tijd">Terugkomtijd:</label>
-<input type="time" id="tijd">
+<label for="time">Terugkomtijd (HH:MM, 24u):</label>
+<input type="time" id="time" required>
 
-<button onclick="maakLink()">Genereer link</button>
+<label for="phone">Telefoonnummer patiÃ«nt (bv. 0496015833):</label>
+<input type="tel" id="phone" placeholder="0496015833" required>
 
-<p>Patiëntlink (kopieer voor WhatsApp of QR-code):</p>
-<input type="text" id="link" readonly>
+<button onclick="verstuurLink()">Genereer link, QR-code en SMS</button>
 
-<p>QR-code:</p>
-<img id="qr" alt="QR-code verschijnt hier">
+<div id="linkOutput"></div>
+<div id="qrcode"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
 
 <script>
-function maakLink() {
-  const tijdInput = document.getElementById("tijd").value;
-  if (!tijdInput) {
-    alert("Vul een geldige tijd in");
+function verstuurLink() {
+  const timeInput = document.getElementById("time").value;
+  let phone = document.getElementById("phone").value.trim();
+
+  if (!timeInput || !phone) {
+    alert("Vul eerst terugkomtijd en telefoonnummer in!");
     return;
   }
 
-  const [u, m] = tijdInput.split(":").map(Number);
-
-  const nu = new Date();
-  let eindtijd = new Date(
-    nu.getFullYear(), nu.getMonth(), nu.getDate(), u, m, 0
-  ).getTime();
-
-  // Als tijd al voorbij is vandaag, geef melding
-  if (eindtijd < Date.now()) {
-    alert("Deze tijd is al voorbij vandaag");
-    return;
+  // Zet Belgisch nummer om naar +32-formaat
+  if (phone.startsWith("0")) {
+    phone = "+32" + phone.substring(1);
   }
 
-  // URL genereren naar uw-wachttijd.html
-  const url = window.location.origin +
-    window.location.pathname.replace("wachttijd-instellen.html","") +
-    "uw-wachttijd.html?end=" + eindtijd;
+  // Bereken eindtijd in milliseconden
+  const [hours, minutes] = timeInput.split(":").map(Number);
+  const now = new Date();
+  let eindTijd = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hours, minutes, 0);
+  if (eindTijd < now) eindTijd.setDate(eindTijd.getDate() + 1); // morgen als tijd al voorbij is
+  const endTimestamp = eindTijd.getTime();
 
-  // Link in tekstveld zetten
-  document.getElementById("link").value = url;
+  // URL naar uw-wachttijd.html
+  const link = `${window.location.origin}/uw-wachttijd.html?end=${endTimestamp}`;
 
-  // QR-code genereren
-  document.getElementById("qr").src =
-    "https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=" +
-    encodeURIComponent(url);
+  // Toon de link
+  document.getElementById("linkOutput").innerHTML = `
+    <p>Link: <a href="${link}" target="_blank">${link}</a></p>
+  `;
+
+  // Genereer QR-code
+  document.getElementById('qrcode').innerHTML = ""; // oude QR-code verwijderen
+  QRCode.toCanvas(document.getElementById('qrcode'), link, function (error) {
+    if (error) console.error(error);
+  });
+
+  // SMS openen
+  const smsBody = encodeURIComponent(`Uw wachttijd is ingesteld. Bekijk de timer hier: ${link}`);
+  const smsLink = `sms:${phone}?body=${smsBody}`;
+  window.location.href = smsLink; // opent SMS-app op mobiel
 }
 </script>
 
