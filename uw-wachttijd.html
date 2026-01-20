@@ -61,6 +61,9 @@ if (type === "botscan") {
 } else if (type === "schildklier") {
   titleEl.innerText = "Uw wachttijd – Schildklierscan";
   messageEl.innerText = "Gelieve plaats te nemen in de wachtzaal.";
+  else if (type === "mibi-scan") {
+  titleEl.innerText = "Uw wachttijd – Mibi-scan";
+  messageEl.innerText = "Gelieve een ontbijt diracht na u inspuiting te eten.";
 }
 
 // Geluid
@@ -131,4 +134,5 @@ document.body.addEventListener("click", () => {
 
 </body>
 </html>
+
 
