@@ -19,6 +19,7 @@ body {
   font-size: 18px;
   margin-top: 20px;
   color: #333;
+  white-space: pre-line; /* Houd enters */
 }
 </style>
 </head>
@@ -32,25 +33,35 @@ body {
 const params = new URLSearchParams(window.location.search);
 const end = Number(params.get("end"));
 const type = params.get("type"); // botscan / schildklier / mibi
+const lang = params.get("lang") || "nl";
 
 let waarschuwingGegeven = false;
 let geluidGeactiveerd = false;
 
-// Geluid bij 5 minuten (Android & iOS na tik)
+// Geluid bij 5 minuten
 const alarmAudio = new Audio("https://actions.google.com/sounds/v1/alarms/medium_bell.ogg");
 
-// Bepaal instructie afhankelijk van scan
-function getInstructie(scan) {
-  if (scan === "botscan") {
-    return "U mag zich begeven naar wachtzaal D0W3.\nGelieve net voor het onderzoek uw blaas te ledigen.";
-  } else if (scan === "schildklier") {
-    return "U mag zich begeven naar wachtzaal D0W3.";
-  } else if (scan === "mibi") {
-    return "Gelieve een vettig ontbijt (boterham met kaas of salami) te nemen.";
-  } else {
-    return "";
+// Alle instructies per type en taal
+const instructies = {
+  botscan: {
+    nl: "U mag zich begeven naar wachtzaal D0W3.\nGelieve net voor het onderzoek uw blaas te ledigen.",
+    fr: "Vous pouvez vous rendre à la salle d'attente D0W3.\nVeuillez vider votre vessie juste avant l'examen.",
+    en: "You may proceed to waiting room D0W3.\nPlease empty your bladder just before the scan.",
+    uk: "Ви можете пройти до кімнати очікування D0W3.\nБудь ласка, спорожніть сечовий міхур перед обстеженням."
+  },
+  schildklier: {
+    nl: "U mag zich begeven naar wachtzaal D0W3.",
+    fr: "Vous pouvez vous rendre à la salle d'attente D0W3.",
+    en: "You may proceed to waiting room D0W3.",
+    uk: "Ви можете пройти до кімнати очікування D0W3."
+  },
+  mibi: {
+    nl: "Gelieve een vettig ontbijt (boterham met kaas of salami) te nemen.",
+    fr: "Veuillez prendre un petit déjeuner gras (pain avec fromage ou salami).",
+    en: "Please have a fatty breakfast (bread with cheese or salami).",
+    uk: "Будь ласка, візьміть жирний сніданок (хліб з сиром або салямі)."
   }
-}
+};
 
 // Timer functie
 function startTimer() {
@@ -73,8 +84,9 @@ function startTimer() {
         const timerDiv = document.getElementById("timer");
         timerDiv.style.color = "red";
 
-        // Instructie tonen
-        document.getElementById("instructie").innerText = getInstructie(type);
+        // Toon instructie
+        const tekst = (instructies[type] && instructies[type][lang]) || "";
+        document.getElementById("instructie").innerText = tekst;
 
         // Trillen (Android)
         if (navigator.vibrate) navigator.vibrate([500,200,500]);
