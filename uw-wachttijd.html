@@ -105,6 +105,10 @@ function startTimer() {
 if (!end) {
   document.getElementById("timer").innerText = "Geen wachttijd ingesteld";
 } else {
+  // Direct de instructie tonen (zonder wachten op 5 minuten)
+  document.getElementById("instructie").innerText =
+    (instructies[type] && instructies[type][lang]) || "";
+
   // Tik nodig voor geluid op iOS
   document.body.addEventListener('click', () => {
     geluidGeactiveerd = true;
@@ -113,7 +117,9 @@ if (!end) {
   // Timer starten
   startTimer();
 }
+
 </script>
 
 </body>
 </html>
+
