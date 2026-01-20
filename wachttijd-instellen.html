@@ -22,7 +22,7 @@ label {
   display: block;
 }
 
-input {
+input, select {
   font-size: 18px;
   padding: 10px;
   width: 90%;
@@ -39,21 +39,21 @@ button {
   margin: 10px auto;
   cursor: pointer;
   border: 2px solid #999;
-  border-radius: 8px;
+  border-radius: 6px;
   background-color: #f8f8f8;
 }
 
 /* Scan-keuze */
 .scankeuze button {
-  text-align: left;
-  padding-left: 20px;
+  text-align: center;
+  margin-bottom: 8px;
 }
 
-/* ACTIEVE KEUZE — belangrijk */
+/* Actieve keuze */
 .scankeuze button.active {
-  background-color: #007bff !important;
+  background-color: #0056b3 !important;
   color: white;
-  border: 2px solid #0056b3;
+  border-color: #003d80;
 }
 
 #linkOutput {
@@ -81,6 +81,14 @@ button {
   <button id="mibi" onclick="kiesScan('mibi')">MIBI-scan</button>
 </div>
 
+<label>Selecteer taal:</label>
+<select id="taal">
+  <option value="nl">Nederlands</option>
+  <option value="fr">Français</option>
+  <option value="en">English</option>
+  <option value="uk">Українська</option>
+</select>
+
 <label>Telefoonnummer patiënt:</label>
 <input type="tel" id="phone" value="04">
 
@@ -102,13 +110,14 @@ function kiesScan(type) {
   document.getElementById(type).classList.add("active");
 }
 
-/* Link + SMS + QR */
+/* Verstuur SMS + QR-code */
 function verstuur() {
   const timeInput = document.getElementById("time").value;
+  const taal = document.getElementById("taal").value;
   let phone = document.getElementById("phone").value.trim();
 
   if (!timeInput || !gekozenScan) {
-    alert("Kies een tijd en een onderzoek.");
+    alert("Kies eerst een tijd en een onderzoek.");
     return;
   }
 
@@ -125,19 +134,16 @@ function verstuur() {
   const endTimestamp = eind.getTime();
 
   const basePath = window.location.pathname.replace("wachttijd-instellen.html", "");
-  const link = `${window.location.origin}${basePath}uw-wachttijd.html?end=${endTimestamp}&type=${gekozenScan}`;
+  const link = `${window.location.origin}${basePath}uw-wachttijd.html?end=${endTimestamp}&type=${gekozenScan}&lang=${taal}`;
 
-  // SMS openen (smartphone)
-  window.location.href = `sms:${phone}?body=${encodeURIComponent(
-    "Uw wachttijd:\n" + link
-  )}`;
+  // SMS openen (werkt enkel op smartphone)
+  window.location.href = `sms:${phone}?body=${encodeURIComponent("Uw wachttijd:\n" + link)}`;
 
-  // Toon link
+  // Toon link + QR-code
   document.getElementById("linkOutput").innerHTML =
     `<p><a href="${link}" target="_blank">${link}</a></p>`;
 
-  // QR-code
-  QRCode.toCanvas(document.getElementById("qrcode"), link, function (error) {
+  QRCode.toCanvas(document.getElementById("qrcode"), link, function(error) {
     if (error) console.error(error);
   });
 }
@@ -145,4 +151,3 @@ function verstuur() {
 
 </body>
 </html>
-
