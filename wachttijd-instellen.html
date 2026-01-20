@@ -32,22 +32,28 @@ input {
 }
 
 button {
-  font-size: 18px;
-  padding: 12px;
-  margin-top: 15px;
-  width: 90%;
-  max-width: 320px;
-  cursor: pointer;
-}
-
-.scankeuze button {
   font-size: 20px;
+  padding: 14px;
+  width: 90%;
+  max-width: 340px;
   margin: 10px auto;
+  cursor: pointer;
+  border: 2px solid #999;
+  border-radius: 8px;
+  background-color: #f8f8f8;
 }
 
+/* Scan-keuze */
+.scankeuze button {
+  text-align: left;
+  padding-left: 20px;
+}
+
+/* ACTIEVE KEUZE — belangrijk */
 .scankeuze button.active {
-  background-color: #007bff;
+  background-color: #007bff !important;
   color: white;
+  border: 2px solid #0056b3;
 }
 
 #linkOutput {
@@ -70,9 +76,9 @@ button {
 
 <label>Onderzoek:</label>
 <div class="scankeuze">
-  <button onclick="kiesScan('botscan')" id="botscan">🦴 Botscan</button>
-  <button onclick="kiesScan('schildklier')" id="schildklier">🦋 Schildklierscan</button>
-  <button onclick="kiesScan('mibi')" id="mibi">❤️ MIBI-scan</button>
+  <button id="botscan" onclick="kiesScan('botscan')">🦴 Botscan</button>
+  <button id="schildklier" onclick="kiesScan('schildklier')">🦋 Schildklierscan</button>
+  <button id="mibi" onclick="kiesScan('mibi')">❤️ MIBI-scan</button>
 </div>
 
 <label>Telefoonnummer patiënt:</label>
@@ -88,12 +94,15 @@ button {
 <script>
 let gekozenScan = "";
 
+/* Scan kiezen */
 function kiesScan(type) {
   gekozenScan = type;
-  document.querySelectorAll(".scankeuze button").forEach(b => b.classList.remove("active"));
+  document.querySelectorAll(".scankeuze button")
+    .forEach(btn => btn.classList.remove("active"));
   document.getElementById(type).classList.add("active");
 }
 
+/* Link + SMS + QR */
 function verstuur() {
   const timeInput = document.getElementById("time").value;
   let phone = document.getElementById("phone").value.trim();
@@ -103,6 +112,7 @@ function verstuur() {
     return;
   }
 
+  // België: 04 → +32
   if (phone.startsWith("0")) {
     phone = "+32" + phone.substring(1);
   }
@@ -114,18 +124,19 @@ function verstuur() {
 
   const endTimestamp = eind.getTime();
 
-  const link =
-    `${window.location.origin}${window.location.pathname.replace("wachttijd-instellen.html","")}uw-wachttijd.html?end=${endTimestamp}&type=${gekozenScan}`;
+  const basePath = window.location.pathname.replace("wachttijd-instellen.html", "");
+  const link = `${window.location.origin}${basePath}uw-wachttijd.html?end=${endTimestamp}&type=${gekozenScan}`;
 
-  // SMS openen (werkt op smartphone)
+  // SMS openen (smartphone)
   window.location.href = `sms:${phone}?body=${encodeURIComponent(
     "Uw wachttijd:\n" + link
   )}`;
 
-  // Toon link + QR
+  // Toon link
   document.getElementById("linkOutput").innerHTML =
     `<p><a href="${link}" target="_blank">${link}</a></p>`;
 
+  // QR-code
   QRCode.toCanvas(document.getElementById("qrcode"), link, function (error) {
     if (error) console.error(error);
   });
