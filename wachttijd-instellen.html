@@ -1,17 +1,19 @@
-
 <!DOCTYPE html>
 <html lang="nl">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Wachttijd instellen</title>
+
 <style>
 body {
   font-family: Arial, sans-serif;
   padding: 20px;
-  max-width: 420px;
-  margin: auto;
   text-align: center;
+}
+
+h1 {
+  margin-bottom: 20px;
 }
 
 label {
@@ -20,137 +22,115 @@ label {
   display: block;
 }
 
-input[type="time"],
-input[type="tel"] {
+input {
   font-size: 18px;
   padding: 10px;
-  width: 100%;
-}
-
-.option {
-  border: 2px solid #ccc;
-  padding: 18px;
-  margin-top: 15px;
-  border-radius: 10px;
-  cursor: pointer;
-  font-size: 18px;
-}
-
-.option strong {
-  font-size: 20px;
-}
-
-.option.selected {
-  border-color: #007bff;
-  background-color: #eef5ff;
+  width: 90%;
+  max-width: 300px;
+  margin: 10px auto;
+  display: block;
 }
 
 button {
-  margin-top: 20px;
-  padding: 12px;
   font-size: 18px;
-  width: 100%;
+  padding: 12px;
+  margin-top: 15px;
+  width: 90%;
+  max-width: 320px;
   cursor: pointer;
 }
 
-#link {
-  margin-top: 15px;
-  width: 100%;
-  font-size: 14px;
+.scankeuze button {
+  font-size: 20px;
+  margin: 10px auto;
 }
 
-img {
+.scankeuze button.active {
+  background-color: #007bff;
+  color: white;
+}
+
+#linkOutput {
+  margin-top: 20px;
+  word-break: break-all;
+}
+
+#qrcode canvas {
   margin-top: 15px;
-  width: 200px;
 }
 </style>
 </head>
+
 <body>
 
 <h1>Wachttijd instellen</h1>
 
-<label>Terugkomtijd</label>
-<input type="time" id="tijd">
+<label>Terugkomtijd:</label>
+<input type="time" id="time" required>
 
-<div class="option" id="botscan" onclick="selectType('botscan')">
-  <strong>Botscan</strong><br>
+<label>Onderzoek:</label>
+<div class="scankeuze">
+  <button onclick="kiesScan('botscan')" id="botscan">🦴 Botscan</button>
+  <button onclick="kiesScan('schildklier')" id="schildklier">🦋 Schildklierscan</button>
+  <button onclick="kiesScan('mibi')" id="mibi">❤️ MIBI-scan</button>
 </div>
 
-<div class="option" id="schildklier" onclick="selectType('schildklier')">
-  <strong>Schildklierscan</strong><br>
-</div>
+<label>Telefoonnummer patiënt:</label>
+<input type="tel" id="phone" value="04">
 
-<div class="option" id="schildklier" onclick="selectType('mibi-scan')">
-  <strong>Mibi-scan</strong><br>
-</div>
+<button onclick="verstuur()">Verstuur SMS + genereer QR</button>
 
-<label>Telefoonnummer patiënt</label>
-<input type="tel" id="phone" value="04" inputmode="numeric">
+<div id="linkOutput"></div>
+<div id="qrcode"></div>
 
-<button onclick="genereerEnVerstuur()">Verstuur SMS + genereer QR</button>
-
-<input type="text" id="link" readonly>
-<img id="qr">
+<script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
 
 <script>
-let gekozenType = null;
+let gekozenScan = "";
 
-function selectType(type) {
-  gekozenType = type;
-  document.querySelectorAll('.option').forEach(o => o.classList.remove('selected'));
-  document.getElementById(type).classList.add('selected');
+function kiesScan(type) {
+  gekozenScan = type;
+  document.querySelectorAll(".scankeuze button").forEach(b => b.classList.remove("active"));
+  document.getElementById(type).classList.add("active");
 }
 
-function genereerEnVerstuur() {
-  const tijd = document.getElementById("tijd").value;
+function verstuur() {
+  const timeInput = document.getElementById("time").value;
   let phone = document.getElementById("phone").value.trim();
 
-  if (!tijd || !gekozenType) {
-    alert("Kies tijd en type onderzoek");
+  if (!timeInput || !gekozenScan) {
+    alert("Kies een tijd en een onderzoek.");
     return;
   }
 
-  if (!phone.startsWith("04") || phone.length < 9) {
-    alert("Vul een geldig Belgisch gsm-nummer in");
-    return;
+  if (phone.startsWith("0")) {
+    phone = "+32" + phone.substring(1);
   }
 
-  // Belgische nummer omzetting
-  phone = "+32" + phone.substring(1);
+  const [u, m] = timeInput.split(":").map(Number);
+  const now = new Date();
+  let eind = new Date(now.getFullYear(), now.getMonth(), now.getDate(), u, m, 0);
+  if (eind < now) eind.setDate(eind.getDate() + 1);
 
-  // Tijd berekenen
-  const [u, m] = tijd.split(":").map(Number);
-  const nu = new Date();
-  let eind = new Date(nu.getFullYear(), nu.getMonth(), nu.getDate(), u, m, 0);
-  if (eind < nu) eind.setDate(eind.getDate() + 1);
-  const endMs = eind.getTime();
+  const endTimestamp = eind.getTime();
 
-  // Link bouwen
-  const base =
-    window.location.origin +
-    window.location.pathname.replace("wachttijd-instellen.html", "");
-
-  const url =
-    `${base}uw-wachttijd.html?end=${endMs}&type=${gekozenType}`;
-
-  // Toon link
-  document.getElementById("link").value = url;
-
-  // QR-code
-  document.getElementById("qr").src =
-    "https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=" +
-    encodeURIComponent(url);
+  const link =
+    `${window.location.origin}${window.location.pathname.replace("wachttijd-instellen.html","")}uw-wachttijd.html?end=${endTimestamp}&type=${gekozenScan}`;
 
   // SMS openen (werkt op smartphone)
-  const smsLink =
-    `sms:${phone}?body=` +
-    encodeURIComponent("Uw wachttijd: " + url);
+  window.location.href = `sms:${phone}?body=${encodeURIComponent(
+    "Uw wachttijd:\n" + link
+  )}`;
 
-  window.location.href = smsLink;
+  // Toon link + QR
+  document.getElementById("linkOutput").innerHTML =
+    `<p><a href="${link}" target="_blank">${link}</a></p>`;
+
+  QRCode.toCanvas(document.getElementById("qrcode"), link, function (error) {
+    if (error) console.error(error);
+  });
 }
 </script>
 
 </body>
 </html>
-
-
