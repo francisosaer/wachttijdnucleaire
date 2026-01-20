@@ -10,129 +10,98 @@ body {
   text-align: center;
   padding: 40px;
 }
-h1 {
-  font-size: 28px;
-}
 #timer {
-  font-size: 48px;
+  font-size: 36px;
   margin-top: 20px;
   color: black;
 }
-#message {
-  font-size: 20px;
+#instructie {
+  font-size: 18px;
   margin-top: 20px;
-  white-space: pre-line;
-}
-#startBtn {
-  font-size: 20px;
-  padding: 10px 20px;
-  margin-top: 20px;
-  cursor: pointer;
+  color: #333;
 }
 </style>
 </head>
 <body>
 
-<h1 id="title">Uw wachttijd</h1>
-
-<button id="startBtn">Tik op scherm om trilsignaal te krijgen 5 min voor eindsignaal</button>
-
+<h1>Uw wachttijd</h1>
 <div id="timer">Laden…</div>
-<div id="message"></div>
+<div id="instructie"></div>
 
 <script>
 const params = new URLSearchParams(window.location.search);
-const endTime = Number(params.get("end"));
-const type = params.get("type");
-
-const timerEl = document.getElementById("timer");
-const messageEl = document.getElementById("message");
-const startBtn = document.getElementById("startBtn");
-const titleEl = document.getElementById("title");
+const end = Number(params.get("end"));
+const type = params.get("type"); // botscan / schildklier / mibi
 
 let waarschuwingGegeven = false;
 let geluidGeactiveerd = false;
-let timerGestart = false;
 
-// Titel & startboodschap
-if (type === "botscan") {
-  titleEl.innerText = "Uw wachttijd – Botscan";
-  messageEl.innerText = "Gelieve enkele glazen water te drinken.";
-} else if (type === "schildklier") {
-  titleEl.innerText = "Uw wachttijd – Schildklierscan";
-  messageEl.innerText = "Gelieve plaats te nemen in de wachtzaal.";
-  else if (type === "mibi-scan") {
-  titleEl.innerText = "Uw wachttijd – Mibi-scan";
-  messageEl.innerText = "Gelieve een ontbijt diracht na u inspuiting te eten.";
+// Geluid bij 5 minuten (Android & iOS na tik)
+const alarmAudio = new Audio("https://actions.google.com/sounds/v1/alarms/medium_bell.ogg");
+
+// Bepaal instructie afhankelijk van scan
+function getInstructie(scan) {
+  if (scan === "botscan") {
+    return "U mag zich begeven naar wachtzaal D0W3.\nGelieve net voor het onderzoek uw blaas te ledigen.";
+  } else if (scan === "schildklier") {
+    return "U mag zich begeven naar wachtzaal D0W3.";
+  } else if (scan === "mibi") {
+    return "Gelieve een vettig ontbijt (boterham met kaas of salami) te nemen.";
+  } else {
+    return "";
+  }
 }
 
-// Geluid
-const alarmAudio = new Audio(
-  "https://actions.google.com/sounds/v1/alarms/medium_bell.ogg"
-);
-
+// Timer functie
 function startTimer() {
-  if (timerGestart) return;
-  timerGestart = true;
-
   const interval = setInterval(() => {
-    const diff = endTime - Date.now();
+    const diff = end - Date.now();
 
     if (diff <= 0) {
-      timerEl.innerText = "U bent aan de beurt";
-      timerEl.style.color = "#d9534f";
-      messageEl.innerText = "";
-      if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
-      if (geluidGeactiveerd) alarmAudio.play().catch(()=>{});
+      document.getElementById("timer").innerText = "U bent aan de beurt";
       clearInterval(interval);
-      return;
-    }
+    } else {
+      const min = Math.floor(diff / 60000);
+      const sec = Math.floor((diff % 60000) / 1000);
+      document.getElementById("timer").innerText = `${min} min ${sec} sec`;
 
-    const min = Math.floor(diff / 60000);
-    const sec = Math.floor((diff % 60000) / 1000);
-    timerEl.innerText = `${min} min ${sec} sec`;
+      // 5-minuten waarschuwing
+      if (!waarschuwingGegeven && diff <= 5 * 60000) {
+        waarschuwingGegeven = true;
 
-    if (!waarschuwingGegeven && diff <= 5 * 60000) {
-      waarschuwingGegeven = true;
-      timerEl.style.color = "red";
+        // Timer rood
+        const timerDiv = document.getElementById("timer");
+        timerDiv.style.color = "red";
 
-      if (type === "botscan") {
-        messageEl.innerText =
-          "U mag zich begeven naar wachtzaal D0W3.\n" +
-          "Gelieve net voor het onderzoek uw blaas te ledigen.";
-      } else if (type === "schildklier") {
-        messageEl.innerText =
-          "U mag zich begeven naar wachtzaal D0W3.";
-      }
+        // Instructie tonen
+        document.getElementById("instructie").innerText = getInstructie(type);
 
-      if (navigator.vibrate) navigator.vibrate([500, 200, 500]);
-      if (geluidGeactiveerd) {
-        alarmAudio.play().catch(()=>{});
-        setTimeout(() => alarmAudio.play().catch(()=>{}), 800);
+        // Trillen (Android)
+        if (navigator.vibrate) navigator.vibrate([500,200,500]);
+
+        // Geluid spelen als gebruiker tikte
+        if (geluidGeactiveerd) {
+          alarmAudio.play().catch(()=>{});
+          setTimeout(()=>{ alarmAudio.play().catch(()=>{}); }, 800);
+        }
       }
     }
   }, 1000);
 }
 
-// Start altijd automatisch
-if (!endTime) {
-  timerEl.innerText = "Geen wachttijd ingesteld";
+// Start timer
+if (!end) {
+  document.getElementById("timer").innerText = "Geen wachttijd ingesteld";
 } else {
+  // Tik nodig voor geluid op iOS
+  document.body.addEventListener('click', () => {
+    geluidGeactiveerd = true;
+  }, { once: true });
+
+  // Timer starten
   startTimer();
 }
-
-// iOS activatie
-startBtn.addEventListener("click", () => {
-  geluidGeactiveerd = true;
-  startBtn.style.display = "none";
-});
-
-document.body.addEventListener("click", () => {
-  geluidGeactiveerd = true;
-}, { once: true });
 </script>
 
 </body>
 </html>
-
-
