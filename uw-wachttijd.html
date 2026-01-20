@@ -25,7 +25,7 @@ body {
 </head>
 <body>
 
-<h1>Uw wachttijd</h1>
+<h1 id="titel">Uw wachttijd</h1>
 <div id="timer">Laden…</div>
 <div id="instructie"></div>
 
@@ -40,6 +40,17 @@ let geluidGeactiveerd = false;
 
 // Geluid bij 5 minuten
 const alarmAudio = new Audio("https://actions.google.com/sounds/v1/alarms/medium_bell.ogg");
+
+// Titels per taal
+const titels = {
+  nl: "Uw wachttijd",
+  fr: "Votre temps d'attente",
+  en: "Your waiting time",
+  uk: "Час очікування"
+};
+
+// Pas titel aan
+document.getElementById("titel").innerText = titels[lang] || titels["nl"];
 
 // Alle instructies per type en taal
 const instructies = {
@@ -63,13 +74,20 @@ const instructies = {
   }
 };
 
+// Direct de instructie tonen bij start
+document.getElementById("instructie").innerText =
+  (instructies[type] && instructies[type][lang]) || "";
+
 // Timer functie
 function startTimer() {
   const interval = setInterval(() => {
     const diff = end - Date.now();
 
     if (diff <= 0) {
-      document.getElementById("timer").innerText = "U bent aan de beurt";
+      document.getElementById("timer").innerText = (lang === "fr") ? "C'est votre tour" :
+                                                   (lang === "en") ? "You are up" :
+                                                   (lang === "uk") ? "Ви на черзі" :
+                                                   "U bent aan de beurt";
       clearInterval(interval);
     } else {
       const min = Math.floor(diff / 60000);
@@ -83,10 +101,6 @@ function startTimer() {
         // Timer rood
         const timerDiv = document.getElementById("timer");
         timerDiv.style.color = "red";
-
-        // Toon instructie
-        const tekst = (instructies[type] && instructies[type][lang]) || "";
-        document.getElementById("instructie").innerText = tekst;
 
         // Trillen (Android)
         if (navigator.vibrate) navigator.vibrate([500,200,500]);
@@ -103,12 +117,11 @@ function startTimer() {
 
 // Start timer
 if (!end) {
-  document.getElementById("timer").innerText = "Geen wachttijd ingesteld";
+  document.getElementById("timer").innerText = (lang === "fr") ? "Aucun temps défini" :
+                                               (lang === "en") ? "No waiting time set" :
+                                               (lang === "uk") ? "Час очікування не встановлено" :
+                                               "Geen wachttijd ingesteld";
 } else {
-  // Direct de instructie tonen (zonder wachten op 5 minuten)
-  document.getElementById("instructie").innerText =
-    (instructies[type] && instructies[type][lang]) || "";
-
   // Tik nodig voor geluid op iOS
   document.body.addEventListener('click', () => {
     geluidGeactiveerd = true;
@@ -117,9 +130,7 @@ if (!end) {
   // Timer starten
   startTimer();
 }
-
 </script>
 
 </body>
 </html>
-
