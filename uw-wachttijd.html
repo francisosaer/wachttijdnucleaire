@@ -4,227 +4,134 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Uw wachttijd</title>
-
 <style>
-  body {
-    font-family: Arial, sans-serif;
-    text-align: center;
-    padding: 40px;
-  }
-
-  h1 {
-    font-size: 26px;
-  }
-
-  #timer {
-    font-size: 36px;
-    margin-top: 20px;
-  }
-
-  #instructie {
-    margin-top: 25px;
-    font-size: 18px;
-    line-height: 1.4;
-  }
-
-  #hint {
-    font-size: 14px;
-    color: gray;
-    margin-top: 30px;
-  }
+body {
+  font-family: Arial, sans-serif;
+  text-align: center;
+  padding: 40px;
+}
+#timer {
+  font-size: 36px;
+  margin-top: 20px;
+  color: black;
+}
+#instructie {
+  font-size: 18px;
+  margin-top: 20px;
+  color: #333;
+  white-space: pre-line; /* Houd enters */
+}
 </style>
 </head>
-
 <body>
 
-<h1 id="titel"></h1>
-<div id="timer">…</div>
+<h1 id="titel">Uw wachttijd</h1>
+<div id="timer">Laden…</div>
 <div id="instructie"></div>
-<div id="hint"></div>
 
 <script>
-// ============================
-// URL PARAMETERS
-// ============================
 const params = new URLSearchParams(window.location.search);
 const end = Number(params.get("end"));
-const onderzoek = params.get("onderzoek"); // botscan | schildklier | mibi
+const type = params.get("type"); // botscan / schildklier / mibi
 const lang = params.get("lang") || "nl";
 
-// ============================
-// VERTALINGEN
-// ============================
-const T = {
-  nl: {
-    titel: {
-      botscan: "Uw wachttijd – Botscan",
-      schildklier: "Uw wachttijd – Schildklierscan",
-      mibi: "Uw wachttijd – MIBI-scan"
-    },
-    hint: "Tik één keer op het scherm om trilling te activeren (iOS).",
-    geenTijd: "Geen wachttijd ingesteld",
-    aanDeBeurt: "U bent aan de beurt",
+let waarschuwingGegeven = false;
+let geluidGeactiveerd = false;
 
-    start: {
-      botscan: "Gelieve in de wachttijd voldoende water te drinken voor een optimaal resultaat.",
-      mibi: "Gelieve een vettig ontbijt te nemen (bv. boterham met kaas of salami)."
-    },
+// Geluid bij 5 minuten
+const alarmAudio = new Audio("https://actions.google.com/sounds/v1/alarms/medium_bell.ogg");
 
-    vijfMin: {
-      botscan:
-        "U mag zich begeven naar wachtzaal D0W3.\n" +
-        "Gelieve net voor het onderzoek uw blaas te ledigen.",
-      schildklier:
-        "U mag zich begeven naar wachtzaal D0W3.",
-      mibi:
-        "U mag zich begeven naar wachtzaal D0W3."
-    }
+// Titels per taal
+const titels = {
+  nl: "Uw wachttijd",
+  fr: "Votre temps d'attente",
+  en: "Your waiting time",
+  uk: "Час очікування"
+};
+
+// Pas titel aan
+document.getElementById("titel").innerText = titels[lang] || titels["nl"];
+
+// Alle instructies per type en taal
+const instructies = {
+  botscan: {
+    nl: "U mag zich begeven naar wachtzaal D0W3.\nGelieve net voor het onderzoek uw blaas te ledigen.",
+    fr: "Vous pouvez vous rendre à la salle d'attente D0W3.\nVeuillez vider votre vessie juste avant l'examen.",
+    en: "You may proceed to waiting room D0W3.\nPlease empty your bladder just before the scan.",
+    uk: "Ви можете пройти до кімнати очікування D0W3.\nБудь ласка, спорожніть сечовий міхур перед обстеженням."
   },
-
-  fr: {
-    titel: {
-      botscan: "Votre temps d’attente – Scintigraphie osseuse",
-      schildklier: "Votre temps d’attente – Scintigraphie thyroïdienne",
-      mibi: "Votre temps d’attente – Scintigraphie MIBI"
-    },
-    hint: "Touchez l’écran une fois pour activer la vibration (iOS).",
-    geenTijd: "Aucun temps d’attente défini",
-    aanDeBeurt: "C’est votre tour",
-
-    start: {
-      botscan:
-        "Veuillez boire suffisamment d’eau pendant l’attente pour un résultat optimal.",
-      mibi:
-        "Veuillez prendre un petit-déjeuner gras (ex. pain avec fromage ou salami)."
-    },
-
-    vijfMin: {
-      botscan:
-        "Veuillez vous rendre en salle d’attente D0W3.\n" +
-        "Veuillez vider votre vessie juste avant l’examen.",
-      schildklier:
-        "Veuillez vous rendre en salle d’attente D0W3.",
-      mibi:
-        "Veuillez vous rendre en salle d’attente D0W3."
-    }
+  schildklier: {
+    nl: "U mag zich begeven naar wachtzaal D0W3.",
+    fr: "Vous pouvez vous rendre à la salle d'attente D0W3.",
+    en: "You may proceed to waiting room D0W3.",
+    uk: "Ви можете пройти до кімнати очікування D0W3."
   },
-
-  en: {
-    titel: {
-      botscan: "Your waiting time – Bone scan",
-      schildklier: "Your waiting time – Thyroid scan",
-      mibi: "Your waiting time – MIBI scan"
-    },
-    hint: "Tap the screen once to enable vibration (iOS).",
-    geenTijd: "No waiting time set",
-    aanDeBeurt: "It is your turn",
-
-    start: {
-      botscan:
-        "Please drink sufficient water during the waiting time for optimal results.",
-      mibi:
-        "Please have a fatty breakfast (e.g. bread with cheese or salami)."
-    },
-
-    vijfMin: {
-      botscan:
-        "You may proceed to waiting room D0W3.\n" +
-        "Please empty your bladder just before the examination.",
-      schildklier:
-        "You may proceed to waiting room D0W3.",
-      mibi:
-        "You may proceed to waiting room D0W3."
-    }
-  },
-
-  uk: {
-    titel: {
-      botscan: "Час очікування – Сцинтиграфія кісток",
-      schildklier: "Час очікування – Сцинтиграфія щитоподібної залози",
-      mibi: "Час очікування – MIBI-сканування"
-    },
-    hint: "Торкніться екрана один раз, щоб увімкнути вібрацію (iOS).",
-    geenTijd: "Час очікування не встановлено",
-    aanDeBeurt: "Ваша черга",
-
-    start: {
-      botscan:
-        "Будь ласка, пийте достатньо води під час очікування для оптимального результату.",
-      mibi:
-        "Будь ласка, з’їжте жирний сніданок (наприклад, хліб із сиром або салямі)."
-    },
-
-    vijfMin: {
-      botscan:
-        "Будь ласка, пройдіть до зали очікування D0W3.\n" +
-        "Перед обстеженням спорожніть сечовий міхур.",
-      schildklier:
-        "Будь ласка, пройдіть до зали очікування D0W3.",
-      mibi:
-        "Будь ласка, пройдіть до зали очікування D0W3."
-    }
+  mibi: {
+    nl: "Gelieve een vettig ontbijt (boterham met kaas of salami) te nemen.",
+    fr: "Veuillez prendre un petit déjeuner gras (pain avec fromage ou salami).",
+    en: "Please have a fatty breakfast (bread with cheese or salami).",
+    uk: "Будь ласка, візьміть жирний сніданок (хліб з сиром або салямі)."
   }
 };
 
-// ============================
-// INIT
-// ============================
-const txt = T[lang] || T.nl;
-const titel = txt.titel[onderzoek] || "Uw wachttijd";
+// Direct de instructie tonen bij start
+document.getElementById("instructie").innerText =
+  (instructies[type] && instructies[type][lang]) || "";
 
-document.getElementById("titel").innerText = titel;
-document.getElementById("hint").innerText = txt.hint;
-
-const instructieDiv = document.getElementById("instructie");
-
-// startboodschap
-if (txt.start[onderzoek]) {
-  instructieDiv.innerText = txt.start[onderzoek];
-}
-
-// ============================
-// TRILLING (iOS)
-let trillingOK = false;
-document.body.addEventListener("click", () => {
-  trillingOK = true;
-}, { once: true });
-
-// ============================
-// TIMER
-// ============================
-if (!end) {
-  document.getElementById("timer").innerText = txt.geenTijd;
-} else {
-
-  let vijfMinGedaan = false;
-
-  setInterval(() => {
+// Timer functie
+function startTimer() {
+  const interval = setInterval(() => {
     const diff = end - Date.now();
 
     if (diff <= 0) {
-      document.getElementById("timer").innerText = txt.aanDeBeurt;
-      return;
-    }
+      document.getElementById("timer").innerText = (lang === "fr") ? "C'est votre tour" :
+                                                   (lang === "en") ? "You are up" :
+                                                   (lang === "uk") ? "Ви на черзі" :
+                                                   "U bent aan de beurt";
+      clearInterval(interval);
+    } else {
+      const min = Math.floor(diff / 60000);
+      const sec = Math.floor((diff % 60000) / 1000);
+      document.getElementById("timer").innerText = `${min} min ${sec} sec`;
 
-    const min = Math.floor(diff / 60000);
-    const sec = Math.floor((diff % 60000) / 1000);
-    document.getElementById("timer").innerText = `${min} min ${sec} sec`;
+      // 5-minuten waarschuwing
+      if (!waarschuwingGegeven && diff <= 5 * 60000) {
+        waarschuwingGegeven = true;
 
-    if (!vijfMinGedaan && diff <= 5 * 60000) {
-      vijfMinGedaan = true;
+        // Timer rood
+        const timerDiv = document.getElementById("timer");
+        timerDiv.style.color = "red";
 
-      document.getElementById("timer").style.color = "red";
+        // Trillen (Android)
+        if (navigator.vibrate) navigator.vibrate([500,200,500]);
 
-      if (navigator.vibrate && trillingOK) {
-        navigator.vibrate([500, 200, 500]);
+        // Geluid spelen als gebruiker tikte
+        if (geluidGeactiveerd) {
+          alarmAudio.play().catch(()=>{});
+          setTimeout(()=>{ alarmAudio.play().catch(()=>{}); }, 800);
+        }
       }
-
-      instructieDiv.innerText = txt.vijfMin[onderzoek];
     }
-
   }, 1000);
+}
+
+// Start timer
+if (!end) {
+  document.getElementById("timer").innerText = (lang === "fr") ? "Aucun temps défini" :
+                                               (lang === "en") ? "No waiting time set" :
+                                               (lang === "uk") ? "Час очікування не встановлено" :
+                                               "Geen wachttijd ingesteld";
+} else {
+  // Tik nodig voor geluid op iOS
+  document.body.addEventListener('click', () => {
+    geluidGeactiveerd = true;
+  }, { once: true });
+
+  // Timer starten
+  startTimer();
 }
 </script>
 
 </body>
 </html>
+
