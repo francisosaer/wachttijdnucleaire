@@ -1,105 +1,147 @@
 <!DOCTYPE html>
 <html lang="nl">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Wachttijd instellen</title>
-<style>
-  body { font-family: Arial, sans-serif; padding: 20px; max-width: 400px; margin:auto; text-align:center; }
-  h1 { font-size: 24px; margin-bottom: 20px; }
-  label, input, select, button { display: block; width: 100%; margin: 10px 0; font-size: 18px; padding: 8px; }
-  button { cursor: pointer; }
-  #linkOutput { margin-top: 20px; word-break: break-word; color: blue; }
-  #qrcode canvas { margin-top: 10px; }
-  .scan-option {
-    display:flex;
-    align-items:center;
-    padding:10px;
-    border-radius:6px;
-    margin-bottom:10px;
-    cursor:pointer;
-    background-color:#f2f2f2;
-    transition: background-color 0.3s;
-  }
-  .scan-option.selected { background-color:#007BFF; color:white; }
-  .scan-option span { margin-left:10px; }
-</style>
+  <meta charset="UTF-8">
+  <title>Wachttijd instellen</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f6f8;
+      padding: 20px;
+    }
+
+    h1 {
+      text-align: center;
+    }
+
+    label {
+      display: block;
+      margin-top: 20px;
+      font-weight: bold;
+    }
+
+    input {
+      width: 100%;
+      padding: 12px;
+      font-size: 16px;
+      margin-top: 6px;
+      box-sizing: border-box;
+    }
+
+    /* Onderzoek keuze */
+    .onderzoeken {
+      margin-top: 10px;
+    }
+
+    .optie {
+      border: 2px solid #ccc;
+      border-radius: 10px;
+      padding: 15px;
+      margin-bottom: 10px;
+      cursor: pointer;
+      font-size: 18px;
+      background: white;
+      transition: 0.2s;
+    }
+
+    .optie.selected {
+      background: #007bff;
+      color: white;
+      border-color: #007bff;
+    }
+
+    button {
+      margin-top: 25px;
+      width: 100%;
+      padding: 15px;
+      font-size: 18px;
+      background: #007bff;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    button:disabled {
+      background: #aaa;
+      cursor: not-allowed;
+    }
+  </style>
 </head>
+
 <body>
 
-<h1>Selecteer terugkomtijd</h1>
+<h1>Wachttijd instellen</h1>
 
-<input type="time" id="time" required placeholder="HH:MM">
+<label>Selecteer terugkomtijd (minuten):</label>
+<input type="number" id="minutes" min="1" required>
 
-<label><strong>Selecteer onderzoek:</strong></label>
-<div id="onderzoeken">
-  <div class="scan-option" data-scan="botscan">💀 <span>Botscan</span></div>
-  <div class="scan-option" data-scan="schildklier">🦋 <span>Schildklierscan</span></div>
-  <div class="scan-option" data-scan="mibi">❤️ <span>MIBI-scan</span></div>
+<label>Selecteer onderzoek:</label>
+<div class="onderzoeken">
+  <div class="optie" data-scan="botscan">💀 Botscan</div>
+  <div class="optie" data-scan="schildklier">🦋 Schildklierscan</div>
+  <div class="optie" data-scan="mibi">❤️ MIBI-scan</div>
 </div>
 
-<label>Taal:</label>
-<select id="taal">
-  <option value="nl">Nederlands</option>
-  <option value="fr">Frans</option>
-  <option value="en">Engels</option>
-  <option value="uk">Oekraïens</option>
-</select>
-
 <label>Telefoonnummer patiënt:</label>
-<input type="tel" id="phone" placeholder="04" required pattern="[0-9]{8,9}" maxlength="10">
+<input type="tel"
+       id="phone"
+       value="04"
+       maxlength="10"
+       inputmode="numeric"
+       required>
 
-<button onclick="verstuurLink()">Genereer link & verstuur SMS</button>
+<button id="sendBtn" disabled>Genereer link & verstuur sms</button>
 
-<div id="linkOutput"></div>
-<div id="qrcode"></div>
-
-<script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
 <script>
-let selectedScan = null;
+  let geselecteerdOnderzoek = null;
 
-// Onderzoek selecteren
-document.querySelectorAll('.scan-option').forEach(div => {
-  div.addEventListener('click', ()=>{
-    selectedScan = div.getAttribute('data-scan');
-    document.querySelectorAll('.scan-option').forEach(d=>d.classList.remove('selected'));
-    div.classList.add('selected');
+  const opties = document.querySelectorAll(".optie");
+  const sendBtn = document.getElementById("sendBtn");
+  const phoneInput = document.getElementById("phone");
+
+  // Onderzoek selecteren
+  opties.forEach(optie => {
+    optie.addEventListener("click", () => {
+      opties.forEach(o => o.classList.remove("selected"));
+      optie.classList.add("selected");
+      geselecteerdOnderzoek = optie.dataset.scan;
+      checkForm();
+    });
   });
-});
 
-function verstuurLink(){
-  const timeInput = document.getElementById('time').value;
-  let phone = document.getElementById('phone').value.trim();
-  const taal = document.getElementById('taal').value;
+  // Cursor na "04" plaatsen
+  phoneInput.addEventListener("focus", () => {
+    if (phoneInput.value === "04") {
+      phoneInput.setSelectionRange(2, 2);
+    }
+  });
 
-  if(!timeInput || !phone || !selectedScan){
-    alert('Vul tijd, telefoonnummer en onderzoekstype in!');
-    return;
+  // Form check
+  function checkForm() {
+    const minutes = document.getElementById("minutes").value;
+    const phone = phoneInput.value;
+    sendBtn.disabled = !(minutes && geselecteerdOnderzoek && phone.length >= 4);
   }
 
-  // België: vervang eerste 0 door +32 als het begint met 0
-  if(phone.startsWith('0')){
-    phone = '+32'+phone.substring(1);
-  }
+  document.getElementById("minutes").addEventListener("input", checkForm);
+  phoneInput.addEventListener("input", checkForm);
 
-  const [u,m] = timeInput.split(':').map(Number);
-  const now = new Date();
-  let eindTijd = new Date(now.getFullYear(), now.getMonth(), now.getDate(), u, m,0);
-  if(eindTijd<now) eindTijd.setDate(eindTijd.getDate()+1);
-  const endTs = eindTijd.getTime();
+  // SMS genereren
+  sendBtn.addEventListener("click", () => {
+    const minutes = parseInt(document.getElementById("minutes").value, 10);
+    const phone = phoneInput.value;
 
-  // Link naar uw-wachttijd.html op GitHub Pages
-  const link = `https://francisosaer.github.io/wachttijdnucleaire/uw-wachttijd.html?end=${endTs}&onderzoek=${selectedScan}&lang=${taal}&v=${Date.now()}`;
+    const endTs = Date.now() + minutes * 60000;
 
-  // Open SMS-app direct op smartphone
-  window.location.href = `sms:${phone}?body=Uw%20wachttijd:%20${encodeURIComponent(link)}`;
+    const link = `${window.location.origin}/uw-wachttijd.html?end=${endTs}&onderzoek=${geselecteerdOnderzoek}`;
 
-  // Toon link + QR-code
-  document.getElementById('linkOutput').innerHTML = `<p>Link: <a href="${link}" target="_blank">${link}</a></p>`;
-  QRCode.toCanvas(document.getElementById('qrcode'), link, function(error){
-    if(error) console.error(error);
+    const smsText = `Uw wachttijd is ingesteld.\nOpen deze link:\n${link}`;
+
+    window.location.href = `sms:${phone}?body=${encodeURIComponent(smsText)}`;
   });
-}
 </script>
 
 </body>
