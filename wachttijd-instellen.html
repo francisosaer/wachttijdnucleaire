@@ -21,12 +21,8 @@
     background-color:#f2f2f2;
     transition: background-color 0.3s;
   }
-  .scan-option img {
-    width:30px;
-    height:30px;
-    margin-right:10px;
-  }
   .scan-option.selected { background-color:#007BFF; color:white; }
+  .scan-option span { margin-left:10px; }
 </style>
 </head>
 <body>
@@ -35,19 +31,11 @@
 
 <input type="time" id="time" required>
 
+<label><strong>Selecteer onderzoek:</strong></label>
 <div id="onderzoeken">
-  <div class="scan-option" data-scan="botscan">
-    <img src="https://cdn-icons-png.flaticon.com/512/1028/1028135.png" alt="Botscan">
-    Botscan
-  </div>
-  <div class="scan-option" data-scan="schildklier">
-    <img src="https://cdn-icons-png.flaticon.com/512/1350/1350650.png" alt="Schildklierscan">
-    Schildklierscan
-  </div>
-  <div class="scan-option" data-scan="mibi">
-    <img src="https://cdn-icons-png.flaticon.com/512/2965/2965567.png" alt="MIBI-scan">
-    MIBI-scan
-  </div>
+  <div class="scan-option" data-scan="botscan">💀 <span>Botscan</span></div>
+  <div class="scan-option" data-scan="schildklier">🦋 <span>Schildklierscan</span></div>
+  <div class="scan-option" data-scan="mibi">❤️ <span>MIBI-scan</span></div>
 </div>
 
 <label>Taal:</label>
@@ -89,6 +77,7 @@ function verstuurLink(){
     return;
   }
 
+  // België: vervang eerste 0 door +32
   if(phone.startsWith('0')){
     phone = '+32'+phone.substring(1);
   }
@@ -99,10 +88,13 @@ function verstuurLink(){
   if(eindTijd<now) eindTijd.setDate(eindTijd.getDate()+1);
   const endTs = eindTijd.getTime();
 
+  // Vaste GitHub Pages URL
   const link = `https://francisosaer.github.io/wachttijdnucleaire/uw-wachttijd.html?end=${endTs}&onderzoek=${selectedScan}&lang=${taal}&v=${Date.now()}`;
 
-  // Alleen op smartphone werkt: window.location.href = `sms:${phone}?body=Uw%20wachttijd:%20${encodeURIComponent(link)}`;
-  
+  // Open SMS-app direct op smartphone
+  window.location.href = `sms:${phone}?body=Uw%20wachttijd:%20${encodeURIComponent(link)}`;
+
+  // Toon link + QR-code
   document.getElementById('linkOutput').innerHTML = `<p>Link: <a href="${link}" target="_blank">${link}</a></p>`;
   QRCode.toCanvas(document.getElementById('qrcode'), link, function(error){
     if(error) console.error(error);
