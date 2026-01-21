@@ -5,22 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Uw wachttijd</title>
 <style>
-body {
-  font-family: Arial, sans-serif;
-  text-align: center;
-  padding: 40px;
-}
-#timer {
-  font-size: 36px;
-  margin-top: 20px;
-  color: black;
-}
-#instructie {
-  font-size: 18px;
-  margin-top: 20px;
-  color: #333;
-  white-space: pre-line; /* Houd enters */
-}
+body { font-family: Arial, sans-serif; text-align:center; padding:40px; }
+#timer { font-size:36px; margin-top:20px; color:black; }
+#instructie { font-size:16px; margin-top:20px; color:gray; }
 </style>
 </head>
 <body>
@@ -30,86 +17,61 @@ body {
 <div id="instructie"></div>
 
 <script>
+// URL parameters ophalen
 const params = new URLSearchParams(window.location.search);
 const end = Number(params.get("end"));
-const type = params.get("type"); // botscan / schildklier / mibi
+const onderzoek = params.get("onderzoek") || "botscan";
 const lang = params.get("lang") || "nl";
 
 let waarschuwingGegeven = false;
-let geluidGeactiveerd = false;
-
-// Geluid bij 5 minuten
 const alarmAudio = new Audio("https://actions.google.com/sounds/v1/alarms/medium_bell.ogg");
 
-// Titels per taal
-const titels = {
-  nl: "Uw wachttijd",
-  fr: "Votre temps d'attente",
-  en: "Your waiting time",
-  uk: "Час очікування"
-};
-
-// Pas titel aan
-document.getElementById("titel").innerText = titels[lang] || titels["nl"];
-
-// Alle instructies per type en taal
 const instructies = {
-  botscan: {
-    nl: "U mag zich begeven naar wachtzaal D0W3.\nGelieve net voor het onderzoek uw blaas te ledigen.",
-    fr: "Vous pouvez vous rendre à la salle d'attente D0W3.\nVeuillez vider votre vessie juste avant l'examen.",
-    en: "You may proceed to waiting room D0W3.\nPlease empty your bladder just before the scan.",
-    uk: "Ви можете пройти до кімнати очікування D0W3.\nБудь ласка, спорожніть сечовий міхур перед обстеженням."
+  nl: {
+    botscan: "U mag zich begeven naar wachtzaal D0W3.\nGelieve net voor het onderzoek uw blaas te ledigen.",
+    schildklier: "U mag zich begeven naar wachtzaal D0W3.",
+    mibi: "Gelieve een vettig ontbijt (boterham met kaas of salami) te nemen."
   },
-  schildklier: {
-    nl: "U mag zich begeven naar wachtzaal D0W3.",
-    fr: "Vous pouvez vous rendre à la salle d'attente D0W3.",
-    en: "You may proceed to waiting room D0W3.",
-    uk: "Ви можете пройти до кімнати очікування D0W3."
+  fr: {
+    botscan: "Vous pouvez vous rendre à la salle d'attente D0W3.\nVeuillez vider votre vessie juste avant l'examen.",
+    schildklier: "Vous pouvez vous rendre à la salle d'attente D0W3.",
+    mibi: "Veuillez prendre un petit déjeuner gras (pain avec fromage ou salami)."
   },
-  mibi: {
-    nl: "Gelieve een vettig ontbijt (boterham met kaas of salami) te nemen.",
-    fr: "Veuillez prendre un petit déjeuner gras (pain avec fromage ou salami).",
-    en: "Please have a fatty breakfast (bread with cheese or salami).",
-    uk: "Будь ласка, візьміть жирний сніданок (хліб з сиром або салямі)."
+  en: {
+    botscan: "You may go to waiting room D0W3.\nPlease empty your bladder just before the exam.",
+    schildklier: "You may go to waiting room D0W3.",
+    mibi: "Please have a fatty breakfast (bread with cheese or salami)."
+  },
+  uk: {
+    botscan: "Ви можете піти до зали очікування D0W3.\nБудь ласка, спорожніть сечовий міхур безпосередньо перед обстеженням.",
+    schildklier: "Ви можете піти до зали очікування D0W3.",
+    mibi: "Будь ласка, з’їжте жирний сніданок (хліб з сиром або салямі)."
   }
 };
 
-// Direct de instructie tonen bij start
-document.getElementById("instructie").innerText =
-  (instructies[type] && instructies[type][lang]) || "";
-
-// Timer functie
 function startTimer() {
   const interval = setInterval(() => {
     const diff = end - Date.now();
+    const timerDiv = document.getElementById("timer");
+    const instrDiv = document.getElementById("instructie");
 
     if (diff <= 0) {
-      document.getElementById("timer").innerText = (lang === "fr") ? "C'est votre tour" :
-                                                   (lang === "en") ? "You are up" :
-                                                   (lang === "uk") ? "Ви на черзі" :
-                                                   "U bent aan de beurt";
+      timerDiv.innerText = "U bent aan de beurt";
+      instrDiv.innerText = instructies[lang][onderzoek];
       clearInterval(interval);
     } else {
-      const min = Math.floor(diff / 60000);
-      const sec = Math.floor((diff % 60000) / 1000);
-      document.getElementById("timer").innerText = `${min} min ${sec} sec`;
+      const min = Math.floor(diff/60000);
+      const sec = Math.floor((diff%60000)/1000);
+      timerDiv.innerText = `${min} min ${sec} sec`;
 
-      // 5-minuten waarschuwing
-      if (!waarschuwingGegeven && diff <= 5 * 60000) {
+      if (!waarschuwingGegeven && diff <= 5*60000) {
         waarschuwingGegeven = true;
-
-        // Timer rood
-        const timerDiv = document.getElementById("timer");
         timerDiv.style.color = "red";
-
-        // Trillen (Android)
+        timerDiv.innerText += " (nog 5 minuten!)";
+        instrDiv.innerText = instructies[lang][onderzoek];
         if (navigator.vibrate) navigator.vibrate([500,200,500]);
-
-        // Geluid spelen als gebruiker tikte
-        if (geluidGeactiveerd) {
-          alarmAudio.play().catch(()=>{});
-          setTimeout(()=>{ alarmAudio.play().catch(()=>{}); }, 800);
-        }
+        alarmAudio.play().catch(()=>{});
+        setTimeout(()=>{alarmAudio.play().catch(()=>{});},800);
       }
     }
   }, 1000);
@@ -117,21 +79,11 @@ function startTimer() {
 
 // Start timer
 if (!end) {
-  document.getElementById("timer").innerText = (lang === "fr") ? "Aucun temps défini" :
-                                               (lang === "en") ? "No waiting time set" :
-                                               (lang === "uk") ? "Час очікування не встановлено" :
-                                               "Geen wachttijd ingesteld";
+  document.getElementById("timer").innerText = "Geen wachttijd ingesteld";
 } else {
-  // Tik nodig voor geluid op iOS
-  document.body.addEventListener('click', () => {
-    geluidGeactiveerd = true;
-  }, { once: true });
-
-  // Timer starten
   startTimer();
 }
 </script>
 
 </body>
 </html>
-
