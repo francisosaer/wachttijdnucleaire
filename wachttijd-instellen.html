@@ -67,7 +67,8 @@ function genereerLink() {
   const endTs = eind.getTime();
 
   // unieke link met cache-buster
-  const link = `${window.location.origin}/uw-wachttijd.html?end=${endTs}&onderzoek=${scan}&lang=${taal}&v=${Date.now()}`;
+  const link = `https://francisosaer.github.io/wachttijdnucleaire/uw-wachttijd.html?end=${endTs}&onderzoek=${scan}&lang=${taal}&v=${Date.now()}`;
+
 
   // QR-code genereren
   QRCode.toCanvas(document.getElementById('qrcode'), link, function(err){ if(err)console.error(err); });
@@ -88,3 +89,4 @@ function genereerLink() {
 
 </body>
 </html>
+
