@@ -134,7 +134,13 @@ function verstuur() {
   const endTimestamp = eind.getTime();
 
   const basePath = window.location.pathname.replace("wachttijd-instellen.html", "");
-  const link = `${window.location.origin}${basePath}uw-wachttijd.html?end=${endTimestamp}&type=${gekozenScan}&lang=${taal}`;
+  const link =
+  `${window.location.origin}${basePath}uw-wachttijd.html` +
+  `?end=${endTimestamp}` +
+  `&onderzoek=${onderzoek}` +
+  `&lang=${taal}` +
+  `&v=${Date.now()}`;
+
 
   // SMS openen (werkt enkel op smartphone)
   window.location.href = `sms:${phone}?body=${encodeURIComponent("Uw wachttijd:\n" + link)}`;
@@ -151,5 +157,6 @@ function verstuur() {
 
 </body>
 </html>
+
 
 
