@@ -3,160 +3,114 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Wachttijd instellen</title>
-
+<title>Wachttijd instellen v1.0</title>
 <style>
 body {
   font-family: Arial, sans-serif;
+  max-width: 500px;
+  margin: auto;
   padding: 20px;
-  text-align: center;
 }
-
-h1 {
-  margin-bottom: 20px;
-}
-
-label {
-  font-size: 18px;
-  margin-top: 15px;
-  display: block;
-}
-
-input, select {
-  font-size: 18px;
-  padding: 10px;
-  width: 90%;
+h1 { text-align:center; }
+label, select, input, button {
+  display:block;
+  width: 100%;
   max-width: 300px;
   margin: 10px auto;
-  display: block;
+  font-size: 16px;
+  padding: 8px;
 }
-
-button {
-  font-size: 20px;
-  padding: 14px;
-  width: 90%;
-  max-width: 340px;
-  margin: 10px auto;
-  cursor: pointer;
-  border: 2px solid #999;
-  border-radius: 6px;
-  background-color: #f8f8f8;
+#onderzoek select { width: 100%; }
+#smsLink {
+  display:none;
+  text-align:center;
+  margin-top:15px;
+  background:#007bff;
+  color:white;
+  padding:12px;
+  text-decoration:none;
+  border-radius:6px;
+  font-size:16px;
 }
-
-/* Scan-keuze */
-.scankeuze button {
-  text-align: center;
-  margin-bottom: 8px;
-}
-
-/* Actieve keuze */
-.scankeuze button.active {
-  background-color: #0056b3 !important;
-  color: white;
-  border-color: #003d80;
-}
-
-#linkOutput {
-  margin-top: 20px;
-  word-break: break-all;
-}
-
-#qrcode canvas {
-  margin-top: 15px;
-}
+#qrcode { text-align:center; margin-top:15px; }
+.kader { padding:10px; border:2px solid gray; border-radius:6px; margin-top:5px; text-align:center; }
+.kader.botscan { border-color:blue; }
+.kader.schildklier { border-color:green; }
+.kader.mibi { border-color:red; }
 </style>
 </head>
-
 <body>
 
 <h1>Wachttijd instellen</h1>
 
-<label>Terugkomtijd:</label>
+<label for="time">Terugkomtijd (HH:MM, 24u):</label>
 <input type="time" id="time" required>
 
-<label>Onderzoek:</label>
-<div class="scankeuze">
-  <button id="botscan" onclick="kiesScan('botscan')">💀 Botscan</button>
-  <button id="schildklier" onclick="kiesScan('schildklier')">🦋 Schildklierscan</button>
-  <button id="mibi" onclick="kiesScan('mibi')">❤️ MIBI-scan</button>
+<div id="onderzoek" class="kader">
+  <label for="scan">Selecteer onderzoek:</label>
+  <select id="scan">
+    <option value="botscan">Botscan</option>
+    <option value="schildklier">Schildklierscan</option>
+    <option value="mibi">MIBI-scan</option>
+  </select>
 </div>
 
-<label>Selecteer taal:</label>
-<select id="taal">
-  <option value="nl">Nederlands</option>
-  <option value="fr">Frans</option>
-  <option value="en">Engels</option>
-  <option value="uk">Oekraïens</option>
-</select>
+<div id="taal">
+  <label for="taalkeuze">Selecteer taal:</label>
+  <select id="taalkeuze">
+    <option value="nl">Nederlands</option>
+    <option value="fr">Frans</option>
+    <option value="en">Engels</option>
+    <option value="uk">Oekraïens</option>
+  </select>
+</div>
 
-<label>Telefoonnummer patiënt:</label>
-<input type="tel" id="phone" value="04">
+<label for="phone">Telefoonnummer patiënt:</label>
+<input type="tel" id="phone" placeholder="04xxxxxxxx" value="04" required>
 
-<button onclick="verstuur()">Verstuur SMS + genereer QR</button>
+<button onclick="genereerLink()">Genereer link + QR-code</button>
 
-<div id="linkOutput"></div>
+<a id="smsLink">📩 Verstuur SMS</a>
+
 <div id="qrcode"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
-
 <script>
-let gekozenScan = "";
-
-/* Scan kiezen */
-function kiesScan(type) {
-  gekozenScan = type;
-  document.querySelectorAll(".scankeuze button")
-    .forEach(btn => btn.classList.remove("active"));
-  document.getElementById(type).classList.add("active");
-}
-
-/* Verstuur SMS + QR-code */
-function verstuur() {
+function genereerLink() {
   const timeInput = document.getElementById("time").value;
-  const taal = document.getElementById("taal").value;
   let phone = document.getElementById("phone").value.trim();
+  const scan = document.getElementById("scan").value;
+  const taal = document.getElementById("taalkeuze").value;
 
-  if (!timeInput || !gekozenScan) {
-    alert("Kies eerst een tijd en een onderzoek.");
-    return;
-  }
+  if (!timeInput || !phone) { alert("Vul tijd en telefoonnummer in"); return; }
+  if (phone.startsWith("0")) { phone = "+32" + phone.substring(1); }
 
-  // België: 04 → +32
-  if (phone.startsWith("0")) {
-    phone = "+32" + phone.substring(1);
-  }
-
-  const [u, m] = timeInput.split(":").map(Number);
+  const [h,m] = timeInput.split(":").map(Number);
   const now = new Date();
-  let eind = new Date(now.getFullYear(), now.getMonth(), now.getDate(), u, m, 0);
-  if (eind < now) eind.setDate(eind.getDate() + 1);
+  let eind = new Date(now.getFullYear(), now.getMonth(), now.getDate(), h, m, 0);
+  if (eind < now) eind.setDate(eind.getDate()+1);
+  const endTs = eind.getTime();
 
-  const endTimestamp = eind.getTime();
+  // cache-buster
+  const link = `${window.location.origin}/uw-wachttijd.html?end=${endTs}&onderzoek=${scan}&lang=${taal}&v=${Date.now()}`;
 
-  const basePath = window.location.pathname.replace("wachttijd-instellen.html", "");
-  const link =
-  `${window.location.origin}${basePath}uw-wachttijd.html` +
-  `?end=${endTimestamp}` +
-  `&onderzoek=${onderzoek}` +
-  `&lang=${taal}` +
-  `&v=${Date.now()}`;
+  // QR-code
+  QRCode.toCanvas(document.getElementById('qrcode'), link, function(err){ if(err)console.error(err); });
 
+  // SMS alleen mobiel
+  const smsA = document.getElementById("smsLink");
+  const isMobile = /Android|iPhone|iPad/i.test(navigator.userAgent);
+  if (isMobile) {
+    smsA.href = `sms:${phone}&body=${encodeURIComponent("Uw wachttijd:\n"+link)}`;
+    smsA.style.display = "block";
+  } else {
+    smsA.style.display = "none";
+  }
 
-  // SMS openen (werkt enkel op smartphone)
-  window.location.href = `sms:${phone}?body=${encodeURIComponent("Uw wachttijd:\n" + link)}`;
-
-  // Toon link + QR-code
-  document.getElementById("linkOutput").innerHTML =
-    `<p><a href="${link}" target="_blank">${link}</a></p>`;
-
-  QRCode.toCanvas(document.getElementById("qrcode"), link, function(error) {
-    if (error) console.error(error);
-  });
+  // kaderkleur aanpassen
+  const kader = document.getElementById("onderzoek");
+  kader.className = "kader " + scan;
 }
 </script>
-
 </body>
 </html>
-
-
-
