@@ -3,90 +3,112 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Wachttijd instellen v2.0</title>
+<title>Wachttijd instellen</title>
 <style>
-body { font-family: Arial, sans-serif; max-width: 500px; margin:auto; padding:20px; }
-h1 { text-align:center; }
-label, select, input, button { display:block; width:100%; max-width:300px; margin:10px auto; font-size:16px; padding:8px; }
-#smsLink { display:none; text-align:center; margin-top:15px; background:#007bff; color:white; padding:12px; text-decoration:none; border-radius:6px; font-size:16px; }
-#qrcode { text-align:center; margin-top:15px; }
-.kader { padding:10px; border:2px solid gray; border-radius:6px; margin-top:5px; text-align:center; }
-.kader.botscan { border-color:blue; }
-.kader.schildklier { border-color:green; }
-.kader.mibi { border-color:red; }
+  body { font-family: Arial, sans-serif; padding: 20px; max-width: 400px; margin:auto; text-align:center; }
+  h1 { font-size: 24px; margin-bottom: 20px; }
+  label, input, select, button { display: block; width: 100%; margin: 10px 0; font-size: 18px; padding: 8px; }
+  button { cursor: pointer; }
+  #linkOutput { margin-top: 20px; word-break: break-word; color: blue; }
+  #qrcode canvas { margin-top: 10px; }
+  .scan-option {
+    display:flex;
+    align-items:center;
+    padding:10px;
+    border-radius:6px;
+    margin-bottom:10px;
+    cursor:pointer;
+    background-color:#f2f2f2;
+    transition: background-color 0.3s;
+  }
+  .scan-option img {
+    width:30px;
+    height:30px;
+    margin-right:10px;
+  }
+  .scan-option.selected { background-color:#007BFF; color:white; }
 </style>
 </head>
 <body>
 
 <h1>Wachttijd instellen</h1>
 
-<label for="time">Terugkomtijd (HH:MM, 24u):</label>
 <input type="time" id="time" required>
 
-<div id="onderzoek" class="kader">
-<label for="scan">Selecteer onderzoek:</label>
-<select id="scan">
-  <option value="botscan">Botscan</option>
-  <option value="schildklier">Schildklierscan</option>
-  <option value="mibi">MIBI-scan</option>
-</select>
+<div id="onderzoeken">
+  <div class="scan-option" data-scan="botscan">
+    <img src="https://cdn-icons-png.flaticon.com/512/1028/1028135.png" alt="Botscan">
+    Botscan
+  </div>
+  <div class="scan-option" data-scan="schildklier">
+    <img src="https://cdn-icons-png.flaticon.com/512/1350/1350650.png" alt="Schildklierscan">
+    Schildklierscan
+  </div>
+  <div class="scan-option" data-scan="mibi">
+    <img src="https://cdn-icons-png.flaticon.com/512/2965/2965567.png" alt="MIBI-scan">
+    MIBI-scan
+  </div>
 </div>
 
-<div id="taal">
-<label for="taalkeuze">Selecteer taal:</label>
-<select id="taalkeuze">
+<label>Taal:</label>
+<select id="taal">
   <option value="nl">Nederlands</option>
   <option value="fr">Frans</option>
   <option value="en">Engels</option>
   <option value="uk">Oekraïens</option>
 </select>
-</div>
 
-<label for="phone">Telefoonnummer patiënt:</label>
-<input type="tel" id="phone" placeholder="04xxxxxxxx" value="04" required>
+<label>Telefoonnummer patiënt:</label>
+<input type="tel" id="phone" placeholder="04" required>
 
-<button onclick="genereerLink()">Genereer link + QR-code</button>
-<a id="smsLink">📩 Verstuur SMS</a>
+<button onclick="verstuurLink()">Genereer link & verstuur SMS</button>
+
+<div id="linkOutput"></div>
 <div id="qrcode"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
 <script>
-function genereerLink() {
-  const timeInput = document.getElementById("time").value;
-  let phone = document.getElementById("phone").value.trim();
-  const scan = document.getElementById("scan").value;
-  const taal = document.getElementById("taalkeuze").value;
+let selectedScan = null;
 
-  if (!timeInput || !phone) { alert("Vul tijd en telefoonnummer in"); return; }
-  if (phone.startsWith("0")) { phone = "+32" + phone.substring(1); }
+// Onderzoek selecteren
+document.querySelectorAll('.scan-option').forEach(div => {
+  div.addEventListener('click', ()=>{
+    selectedScan = div.getAttribute('data-scan');
+    document.querySelectorAll('.scan-option').forEach(d=>d.classList.remove('selected'));
+    div.classList.add('selected');
+  });
+});
 
-  const [h,m] = timeInput.split(":").map(Number);
+function verstuurLink(){
+  const timeInput = document.getElementById('time').value;
+  let phone = document.getElementById('phone').value.trim();
+  const taal = document.getElementById('taal').value;
+
+  if(!timeInput || !phone || !selectedScan){
+    alert('Vul tijd, telefoonnummer en onderzoekstype in!');
+    return;
+  }
+
+  if(phone.startsWith('0')){
+    phone = '+32'+phone.substring(1);
+  }
+
+  const [u,m] = timeInput.split(':').map(Number);
   const now = new Date();
-  let eind = new Date(now.getFullYear(), now.getMonth(), now.getDate(), h, m, 0);
-  if (eind < now) eind.setDate(eind.getDate()+1);
-  const endTs = eind.getTime();
+  let eindTijd = new Date(now.getFullYear(), now.getMonth(), now.getDate(), u, m,0);
+  if(eindTijd<now) eindTijd.setDate(eindTijd.getDate()+1);
+  const endTs = eindTijd.getTime();
 
-  // unieke link met cache-buster
-  const link = `https://francisosaer.github.io/wachttijdnucleaire/uw-wachttijd.html?end=${endTs}&onderzoek=${scan}&lang=${taal}&v=${Date.now()}`;
+  const link = `https://francisosaer.github.io/wachttijdnucleaire/uw-wachttijd.html?end=${endTs}&onderzoek=${selectedScan}&lang=${taal}&v=${Date.now()}`;
 
-
-  // QR-code genereren
-  QRCode.toCanvas(document.getElementById('qrcode'), link, function(err){ if(err)console.error(err); });
-
-  // SMS alleen mobiel
-  const smsA = document.getElementById("smsLink");
-  const isMobile = /Android|iPhone|iPad/i.test(navigator.userAgent);
-  if (isMobile) {
-    smsA.href = `sms:${phone}?body=${encodeURIComponent("Uw wachttijd:\n"+link)}`;
-    smsA.style.display = "block";
-  } else { smsA.style.display = "none"; }
-
-  // kaderkleur aanpassen
-  const kader = document.getElementById("onderzoek");
-  kader.className = "kader " + scan;
+  // Alleen op smartphone werkt: window.location.href = `sms:${phone}?body=Uw%20wachttijd:%20${encodeURIComponent(link)}`;
+  
+  document.getElementById('linkOutput').innerHTML = `<p>Link: <a href="${link}" target="_blank">${link}</a></p>`;
+  QRCode.toCanvas(document.getElementById('qrcode'), link, function(error){
+    if(error) console.error(error);
+  });
 }
 </script>
 
 </body>
 </html>
-
