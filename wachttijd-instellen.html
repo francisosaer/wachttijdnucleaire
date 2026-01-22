@@ -1,162 +1,145 @@
 <!DOCTYPE html>
 <html lang="nl">
 <head>
-  <meta charset="UTF-8">
-  <title>Wachttijd instellen</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wachttijd instellen</title>
 
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f4f6f8;
-      padding: 20px;
-    }
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    padding: 30px;
+    max-width: 420px;
+    margin: auto;
+  }
 
-    h1 {
-      text-align: center;
-    }
+  h1 {
+    text-align: center;
+  }
 
-    label {
-      display: block;
-      margin-top: 20px;
-      font-weight: bold;
-    }
+  label {
+    display: block;
+    margin-top: 25px;
+    font-weight: bold;
+  }
 
-    input {
-      width: 100%;
-      padding: 12px;
-      font-size: 16px;
-      margin-top: 6px;
-      box-sizing: border-box;
-    }
+  input[type="time"],
+  input[type="tel"] {
+    width: 100%;
+    padding: 12px;
+    font-size: 16px;
+    margin-top: 8px;
+    color: black;
+  }
 
-    .onderzoeken {
-      margin-top: 10px;
-    }
+  .onderzoeken {
+    margin-top: 10px;
+  }
 
-    .optie {
-      border: 2px solid #ccc;
-      border-radius: 10px;
-      padding: 15px;
-      margin-bottom: 10px;
-      cursor: pointer;
-      font-size: 18px;
-      background: white;
-      transition: 0.2s;
-    }
+  .optie {
+    border: 2px solid #ccc;
+    border-radius: 10px;
+    padding: 14px;
+    margin-top: 10px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    font-size: 18px;
+  }
 
-    .optie.selected {
-      background: #007bff;
-      color: white;
-      border-color: #007bff;
-    }
+  .optie span {
+    font-size: 26px;
+    margin-right: 12px;
+  }
 
-    button {
-      margin-top: 25px;
-      width: 100%;
-      padding: 15px;
-      font-size: 18px;
-      background: #007bff;
-      color: white;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-    }
+  .optie.actief {
+    background-color: #007bff;
+    color: white;
+    border-color: #007bff;
+  }
 
-    button:disabled {
-      background: #aaa;
-    }
-  </style>
+  button {
+    margin-top: 30px;
+    width: 100%;
+    padding: 14px;
+    font-size: 18px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 8px;
+  }
+</style>
 </head>
 
 <body>
 
 <h1>Wachttijd instellen</h1>
 
-<label>Selecteer terugkomtijd (24u):</label>
-<input type="time" id="returnTime" required>
-
-<label>Selecteer onderzoek:</label>
+<label>Selecteer onderzoek</label>
 <div class="onderzoeken">
-  <div class="optie" data-scan="botscan">💀 Botscan</div>
-  <div class="optie" data-scan="schildklier">🦋 Schildklierscan</div>
-  <div class="optie" data-scan="mibi">❤️ MIBI-scan</div>
+  <div class="optie" data-onderzoek="botscan">
+    <span>💀</span> Botscan
+  </div>
+  <div class="optie" data-onderzoek="schildklier">
+    <span>🦋</span> Schildklierscan
+  </div>
+  <div class="optie" data-onderzoek="mibi">
+    <span>❤️</span> MIBI-scan
+  </div>
 </div>
 
-<label>Telefoonnummer patiënt:</label>
-<input type="tel"
-       id="phone"
-       value="04"
-       maxlength="10"
-       inputmode="numeric"
-       required>
+<label>Selecteer terugkomtijd</label>
+<input type="time" id="tijd">
 
-<button id="sendBtn" disabled>Genereer link & verstuur sms</button>
+<label>Telefoonnummer patiënt</label>
+<input type="tel" id="phone" value="04">
+
+<button id="verstuur">Genereer link & verstuur SMS</button>
 
 <script>
-  let geselecteerdOnderzoek = null;
+let geselecteerdOnderzoek = null;
 
-  const opties = document.querySelectorAll(".optie");
-  const sendBtn = document.getElementById("sendBtn");
-  const phoneInput = document.getElementById("phone");
-  const timeInput = document.getElementById("returnTime");
-
-  opties.forEach(optie => {
-    optie.addEventListener("click", () => {
-      opties.forEach(o => o.classList.remove("selected"));
-      optie.classList.add("selected");
-      geselecteerdOnderzoek = optie.dataset.scan;
-      checkForm();
-    });
+// onderzoek selecteren
+document.querySelectorAll(".optie").forEach(optie => {
+  optie.addEventListener("click", () => {
+    document.querySelectorAll(".optie").forEach(o => o.classList.remove("actief"));
+    optie.classList.add("actief");
+    geselecteerdOnderzoek = optie.dataset.onderzoek;
   });
+});
 
-  phoneInput.addEventListener("focus", () => {
-    if (phoneInput.value === "04") {
-      phoneInput.setSelectionRange(2, 2);
-    }
-  });
+document.getElementById("verstuur").addEventListener("click", () => {
+  const tijd = document.getElementById("tijd").value;
+  const telefoon = document.getElementById("phone").value;
 
-  function checkForm() {
-    sendBtn.disabled = !(
-      timeInput.value &&
-      geselecteerdOnderzoek &&
-      phoneInput.value.length >= 4
-    );
+  if (!tijd || !geselecteerdOnderzoek || telefoon.length < 6) {
+    alert("Gelieve alle velden correct in te vullen.");
+    return;
   }
 
-  timeInput.addEventListener("change", checkForm);
-  phoneInput.addEventListener("input", checkForm);
+  // eindtijd berekenen
+  const [uur, min] = tijd.split(":").map(Number);
+  const nu = new Date();
+  const eindtijd = new Date();
+  eindtijd.setHours(uur, min, 0, 0);
 
-  sendBtn.addEventListener("click", () => {
-    const [hours, minutes] = timeInput.value.split(":").map(Number);
-    const now = new Date();
-    const endTime = new Date();
+  if (eindtijd < nu) {
+    eindtijd.setDate(eindtijd.getDate() + 1);
+  }
 
-    endTime.setHours(hours, minutes, 0, 0);
+  const endTs = eindtijd.getTime();
 
-    if (endTime <= now) {
-      alert("Terugkomtijd moet later zijn dan het huidige uur.");
-      return;
-    }
+  // 🔑 JUISTE RELATIEVE LINK (GitHub Pages proof)
+  const link = `uw-wachttijd.html?end=${endTs}&onderzoek=${geselecteerdOnderzoek}`;
 
-    const endTs = endTime.getTime();
-    const phone = phoneInput.value;
+  const smsTekst = encodeURIComponent(
+    "Uw wachttijd:\n" + link
+  );
 
-
-  
-  const link = `https://francisosaer.github.io/wachttijdnucleaire/uw-wachttijd.html?end=${endTs}&onderzoek=${selectedScan}&lang=${taal}&v=${Date.now()}`;
-
-
-    const smsText =
-      `Uw wachttijd is ingesteld.\n` +
-      `Terugkomst om ${timeInput.value}.\n\n` +
-      `${link}`;
-
-    window.location.href = `sms:${phone}?body=${encodeURIComponent(smsText)}`;
-  });
+  // opent SMS-app (iPhone & Android)
+  window.location.href = `sms:${telefoon}?body=${smsTekst}`;
+});
 </script>
 
 </body>
 </html>
-
-
