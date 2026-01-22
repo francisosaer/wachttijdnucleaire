@@ -142,7 +142,9 @@
     const endTs = endTime.getTime();
     const phone = phoneInput.value;
 
-    const link = `${window.location.origin}/uw-wachttijd.html?end=${endTs}&onderzoek=${geselecteerdOnderzoek}`;
+
+    const link = `uw-wachttijd.html?end=${endTs}&onderzoek=${geselecteerdOnderzoek}`;
+
 
     const smsText =
       `Uw wachttijd is ingesteld.\n` +
@@ -155,3 +157,4 @@
 
 </body>
 </html>
+
