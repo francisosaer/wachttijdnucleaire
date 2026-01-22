@@ -129,17 +129,22 @@ document.getElementById("verstuur").addEventListener("click", () => {
 
   const endTs = eindtijd.getTime();
 
-  // 🔑 JUISTE RELATIEVE LINK (GitHub Pages proof)
-  const link = `uw-wachttijd.html?end=${endTs}&onderzoek=${geselecteerdOnderzoek}`;
+const link = `uw-wachttijd.html?end=${endTs}&onderzoek=${geselecteerdOnderzoek}`;
 
-  const smsTekst = encodeURIComponent(
-    "Uw wachttijd:\n" + link
-  );
+const smsTekst = encodeURIComponent(
+  "Uw wachttijd:\n" + link
+);
 
-  // opent SMS-app (iPhone & Android)
-  window.location.href = `sms:${telefoon}?body=${smsTekst}`;
+const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+const smsLink = isIOS
+  ? `sms:${telefoon}&body=${smsTekst}`
+  : `sms:${telefoon}?body=${smsTekst}`;
+
+window.location.href = smsLink;
+
 });
 </script>
 
 </body>
 </html>
+
