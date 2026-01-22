@@ -99,7 +99,7 @@
 <script>
 let geselecteerdOnderzoek = null;
 
-// onderzoek selecteren
+// Onderzoek selecteren
 document.querySelectorAll(".optie").forEach(optie => {
   optie.addEventListener("click", () => {
     document.querySelectorAll(".optie").forEach(o => o.classList.remove("actief"));
@@ -117,7 +117,7 @@ document.getElementById("verstuur").addEventListener("click", () => {
     return;
   }
 
-  // eindtijd berekenen
+  // Eindtijd berekenen
   const [uur, min] = tijd.split(":").map(Number);
   const nu = new Date();
   const eindtijd = new Date();
@@ -129,22 +129,27 @@ document.getElementById("verstuur").addEventListener("click", () => {
 
   const endTs = eindtijd.getTime();
 
-const link = `uw-wachttijd.html?end=${endTs}&onderzoek=${geselecteerdOnderzoek}`;
+  // 🔑 ABSOLUTE URL opbouwen (SMS-veilig)
+  const basisPad = window.location.href
+    .split("/")
+    .slice(0, -1)
+    .join("/");
 
-const smsTekst = encodeURIComponent(
-  "Uw wachttijd:\n" + link
-);
+  const link = `${basisPad}/uw-wachttijd.html?end=${endTs}&onderzoek=${geselecteerdOnderzoek}`;
 
-const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
-const smsLink = isIOS
-  ? `sms:${telefoon}&body=${smsTekst}`
-  : `sms:${telefoon}?body=${smsTekst}`;
+  const smsTekst = encodeURIComponent(
+    "Uw wachttijd:\n" + link
+  );
 
-window.location.href = smsLink;
+  // iPhone vs Android SMS-regel
+  const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+  const smsLink = isIOS
+    ? `sms:${telefoon}&body=${smsTekst}`
+    : `sms:${telefoon}?body=${smsTekst}`;
 
+  window.location.href = smsLink;
 });
 </script>
 
 </body>
 </html>
-
