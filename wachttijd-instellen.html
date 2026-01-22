@@ -30,7 +30,6 @@
       box-sizing: border-box;
     }
 
-    /* Onderzoek keuze */
     .onderzoeken {
       margin-top: 10px;
     }
@@ -66,7 +65,6 @@
 
     button:disabled {
       background: #aaa;
-      cursor: not-allowed;
     }
   </style>
 </head>
@@ -75,8 +73,8 @@
 
 <h1>Wachttijd instellen</h1>
 
-<label>Selecteer terugkomtijd (minuten):</label>
-<input type="number" id="minutes" min="1" required>
+<label>Selecteer terugkomtijd (24u):</label>
+<input type="time" id="returnTime" required>
 
 <label>Selecteer onderzoek:</label>
 <div class="onderzoeken">
@@ -101,8 +99,8 @@
   const opties = document.querySelectorAll(".optie");
   const sendBtn = document.getElementById("sendBtn");
   const phoneInput = document.getElementById("phone");
+  const timeInput = document.getElementById("returnTime");
 
-  // Onderzoek selecteren
   opties.forEach(optie => {
     optie.addEventListener("click", () => {
       opties.forEach(o => o.classList.remove("selected"));
@@ -112,33 +110,44 @@
     });
   });
 
-  // Cursor na "04" plaatsen
   phoneInput.addEventListener("focus", () => {
     if (phoneInput.value === "04") {
       phoneInput.setSelectionRange(2, 2);
     }
   });
 
-  // Form check
   function checkForm() {
-    const minutes = document.getElementById("minutes").value;
-    const phone = phoneInput.value;
-    sendBtn.disabled = !(minutes && geselecteerdOnderzoek && phone.length >= 4);
+    sendBtn.disabled = !(
+      timeInput.value &&
+      geselecteerdOnderzoek &&
+      phoneInput.value.length >= 4
+    );
   }
 
-  document.getElementById("minutes").addEventListener("input", checkForm);
+  timeInput.addEventListener("change", checkForm);
   phoneInput.addEventListener("input", checkForm);
 
-  // SMS genereren
   sendBtn.addEventListener("click", () => {
-    const minutes = parseInt(document.getElementById("minutes").value, 10);
-    const phone = phoneInput.value;
+    const [hours, minutes] = timeInput.value.split(":").map(Number);
+    const now = new Date();
+    const endTime = new Date();
 
-    const endTs = Date.now() + minutes * 60000;
+    endTime.setHours(hours, minutes, 0, 0);
+
+    if (endTime <= now) {
+      alert("Terugkomtijd moet later zijn dan het huidige uur.");
+      return;
+    }
+
+    const endTs = endTime.getTime();
+    const phone = phoneInput.value;
 
     const link = `${window.location.origin}/uw-wachttijd.html?end=${endTs}&onderzoek=${geselecteerdOnderzoek}`;
 
-    const smsText = `Uw wachttijd is ingesteld.\nOpen deze link:\n${link}`;
+    const smsText =
+      `Uw wachttijd is ingesteld.\n` +
+      `Terugkomst om ${timeInput.value}.\n\n` +
+      `${link}`;
 
     window.location.href = `sms:${phone}?body=${encodeURIComponent(smsText)}`;
   });
