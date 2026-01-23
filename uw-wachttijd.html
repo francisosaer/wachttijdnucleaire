@@ -15,13 +15,24 @@
   }
 
   h1 {
-    margin-bottom: 20px;
+    margin-bottom: 15px;
   }
 
   .timer {
     font-size: 48px;
     font-weight: bold;
     margin: 20px 0;
+    color: black;
+  }
+
+  .timer.rood {
+    color: red;
+  }
+
+  .terugkomtijd {
+    font-size: 20px;
+    color: #555;
+    margin-top: 6px;
   }
 
   .instructie {
@@ -35,13 +46,13 @@
 
 <h1 id="titel"></h1>
 
-<div class="timer" id="timer">--:--</div>
-
+<div class="timer" id="timer">--</div>
+<div class="terugkomtijd" id="terugkomtijd"></div>
 <div class="instructie" id="instructie"></div>
 
 <script>
 /* -------------------------------
-   Parameters uitlezen
+   Parameters
 -------------------------------- */
 const params = new URLSearchParams(window.location.search);
 const endTs = Number(params.get("end"));
@@ -49,11 +60,12 @@ const onderzoek = params.get("onderzoek");
 const lang = params.get("lang") || "nl";
 
 /* -------------------------------
-   Teksten per taal & onderzoek
+   Teksten
 -------------------------------- */
 const teksten = {
   nl: {
     titel: "Uw wachttijd",
+    terug: "Terugkomen om",
     botscan: {
       start: "Gelieve enkele glazen water te drinken.",
       vijfmin: "U mag zich begeven naar wachtzaal D0W3.\nGelieve net voor het onderzoek uw blaas te ledigen."
@@ -70,9 +82,10 @@ const teksten = {
 
   fr: {
     titel: "Votre temps d’attente",
+    terug: "Revenir à",
     botscan: {
       start: "Veuillez boire plusieurs verres d’eau.",
-      vijfmin: "Vous pouvez vous rendre à la salle d’attente D0W3.\nVeuillez vider votre vessie juste avant l’examen."
+      vijfmin: "Vous pouvez vous rendre à la salle d’attente D0W3.\nVeuillez vider votre vessie avant l’examen."
     },
     schildklier: {
       start: "Veuillez prendre place dans la salle d’attente.",
@@ -86,9 +99,10 @@ const teksten = {
 
   en: {
     titel: "Your waiting time",
+    terug: "Please return at",
     botscan: {
       start: "Please drink several glasses of water.",
-      vijfmin: "You may proceed to waiting room D0W3.\nPlease empty your bladder just before the examination."
+      vijfmin: "You may proceed to waiting room D0W3.\nPlease empty your bladder before the examination."
     },
     schildklier: {
       start: "Please take a seat in the waiting area.",
@@ -102,9 +116,10 @@ const teksten = {
 
   uk: {
     titel: "Ваш час очікування",
+    terug: "Повернутися о",
     botscan: {
       start: "Будь ласка, випийте кілька склянок води.",
-      vijfmin: "Ви можете пройти до зали очікування D0W3.\nБудь ласка, спорожніть сечовий міхур перед обстеженням."
+      vijfmin: "Ви можете пройти до зали очікування D0W3.\nСпорожніть сечовий міхур перед обстеженням."
     },
     schildklier: {
       start: "Будь ласка, сядьте в залі очікування.",
@@ -117,25 +132,42 @@ const teksten = {
   }
 };
 
+const t = teksten[lang] || teksten.nl;
+
 /* -------------------------------
-   Titel instellen
+   Titel & startboodschap
 -------------------------------- */
-document.getElementById("titel").textContent =
-  teksten[lang]?.titel || teksten.nl.titel;
+document.getElementById("titel").textContent = t.titel;
+document.getElementById("instructie").textContent =
+  t[onderzoek]?.start || "";
 
 /* -------------------------------
-   Instructies tonen
+   Exact uur
 -------------------------------- */
-const instructieEl = document.getElementById("instructie");
-const instructies = teksten[lang]?.[onderzoek] || teksten.nl[onderzoek];
+const eindDatum = new Date(endTs);
+const uurTekst =
+  String(eindDatum.getHours()).padStart(2,"0") + ":" +
+  String(eindDatum.getMinutes()).padStart(2,"0");
 
-// startboodschap
-if (instructies?.start) {
-  instructieEl.textContent = instructies.start;
-}
+document.getElementById("terugkomtijd").textContent =
+  `${t.terug} ${uurTekst}`;
 
 /* -------------------------------
-   Timer + 5-minuten-moment
+   Vibratie: iOS-passieve activatie
+-------------------------------- */
+let vibratieToegelaten = false;
+
+// eerste willekeurige tik is voldoende
+document.addEventListener("touchstart", () => {
+  vibratieToegelaten = true;
+}, { once: true });
+
+document.addEventListener("click", () => {
+  vibratieToegelaten = true;
+}, { once: true });
+
+/* -------------------------------
+   Timer
 -------------------------------- */
 let vijfMinGetoond = false;
 
@@ -148,21 +180,24 @@ function updateTimer() {
     return;
   }
 
-  const min = Math.floor(resterend / 60000);
-  const sec = Math.floor((resterend % 60000) / 1000);
-  document.getElementById("timer").textContent =
-    `${String(min).padStart(2,"0")}:${String(sec).padStart(2,"0")}`;
+  const totaalMin = Math.floor(resterend / 60000);
+  const uren = Math.floor(totaalMin / 60);
+  const minuten = totaalMin % 60;
 
-  // 5 minuten-melding
+  document.getElementById("timer").textContent =
+    uren > 0
+      ? `${uren} h ${String(minuten).padStart(2,"0")} min`
+      : `${minuten} min`;
+
   if (resterend <= 5 * 60000 && !vijfMinGetoond) {
-    if (instructies?.vijfmin) {
-      instructieEl.textContent = instructies.vijfmin;
-    }
     vijfMinGetoond = true;
 
-    // trilsignaal (alleen met user interaction mogelijk op iOS)
-    if (navigator.vibrate) {
-      navigator.vibrate([300, 200, 300]);
+    document.getElementById("timer").classList.add("rood");
+    document.getElementById("instructie").textContent =
+      t[onderzoek]?.vijfmin || "";
+
+    if (navigator.vibrate && vibratieToegelaten) {
+      navigator.vibrate([300,200,300]);
     }
   }
 }
