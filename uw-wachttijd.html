@@ -180,14 +180,27 @@ function updateTimer() {
     return;
   }
 
-  const totaalMin = Math.floor(resterend / 60000);
-  const uren = Math.floor(totaalMin / 60);
-  const minuten = totaalMin % 60;
+  const totaalSec = Math.floor(resterend / 1000);
 
-  document.getElementById("timer").textContent =
-    uren > 0
-      ? `${uren} h ${String(minuten).padStart(2,"0")} min`
-      : `${minuten} min`;
+const uren = Math.floor(totaalSec / 3600);
+const minuten = Math.floor((totaalSec % 3600) / 60);
+const seconden = totaalSec % 60;
+
+let tijdTekst = "";
+
+if (uren > 0) {
+  tijdTekst =
+    `${uren} h ` +
+    `${String(minuten).padStart(2,"0")} min ` +
+    `${String(seconden).padStart(2,"0")} s`;
+} else {
+  tijdTekst =
+    `${minuten} min ` +
+    `${String(seconden).padStart(2,"0")} s`;
+}
+
+document.getElementById("timer").textContent = tijdTekst;
+
 
   if (resterend <= 5 * 60000 && !vijfMinGetoond) {
     vijfMinGetoond = true;
@@ -208,3 +221,4 @@ setInterval(updateTimer, 1000);
 
 </body>
 </html>
+
