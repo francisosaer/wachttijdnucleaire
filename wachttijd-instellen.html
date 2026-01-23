@@ -24,7 +24,8 @@
   }
 
   input[type="time"],
-  input[type="tel"] {
+  input[type="tel"],
+  select {
     width: 100%;
     padding: 12px;
     font-size: 16px;
@@ -94,6 +95,14 @@
 <label>Telefoonnummer patiënt</label>
 <input type="tel" id="phone" value="04">
 
+<label>Selecteer taal</label>
+<select id="taal">
+  <option value="nl">Nederlands</option>
+  <option value="fr">Frans</option>
+  <option value="en">Engels</option>
+  <option value="uk">Oekraïens</option>
+</select>
+
 <button id="verstuur">Genereer link & verstuur SMS</button>
 
 <script>
@@ -111,6 +120,7 @@ document.querySelectorAll(".optie").forEach(optie => {
 document.getElementById("verstuur").addEventListener("click", () => {
   const tijd = document.getElementById("tijd").value;
   const telefoon = document.getElementById("phone").value;
+  const taal = document.getElementById("taal").value;
 
   if (!tijd || !geselecteerdOnderzoek || telefoon.length < 6) {
     alert("Gelieve alle velden correct in te vullen.");
@@ -129,13 +139,13 @@ document.getElementById("verstuur").addEventListener("click", () => {
 
   const endTs = eindtijd.getTime();
 
-  // 🔑 ABSOLUTE URL opbouwen (SMS-veilig)
+  // Absolute URL opbouwen (SMS-veilig)
   const basisPad = window.location.href
     .split("/")
     .slice(0, -1)
     .join("/");
 
-  const link = `${basisPad}/uw-wachttijd.html?end=${endTs}&onderzoek=${geselecteerdOnderzoek}`;
+  const link = `${basisPad}/uw-wachttijd.html?end=${endTs}&onderzoek=${geselecteerdOnderzoek}&lang=${taal}`;
 
   const smsTekst = encodeURIComponent(
     "Uw wachttijd:\n" + link
