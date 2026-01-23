@@ -1,88 +1,174 @@
 <!DOCTYPE html>
-<html lang="nl">
+<html lang="">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Uw wachttijd</title>
+
 <style>
-body { font-family: Arial, sans-serif; text-align:center; padding:40px; }
-#timer { font-size:36px; margin-top:20px; color:black; }
-#instructie { font-size:16px; margin-top:20px; color:gray; }
+  body {
+    font-family: Arial, sans-serif;
+    padding: 30px;
+    text-align: center;
+    max-width: 420px;
+    margin: auto;
+  }
+
+  h1 {
+    margin-bottom: 20px;
+  }
+
+  .timer {
+    font-size: 48px;
+    font-weight: bold;
+    margin: 20px 0;
+  }
+
+  .instructie {
+    font-size: 18px;
+    margin-top: 25px;
+  }
 </style>
 </head>
+
 <body>
 
-<h1 id="titel">Uw wachttijd</h1>
-<div id="timer">Laden…</div>
-<div id="instructie"></div>
+<h1 id="titel"></h1>
+
+<div class="timer" id="timer">--:--</div>
+
+<div class="instructie" id="instructie"></div>
 
 <script>
-// URL parameters ophalen
+/* -------------------------------
+   Parameters uitlezen
+-------------------------------- */
 const params = new URLSearchParams(window.location.search);
-const end = Number(params.get("end"));
-const onderzoek = params.get("onderzoek") || "botscan";
+const endTs = Number(params.get("end"));
+const onderzoek = params.get("onderzoek");
 const lang = params.get("lang") || "nl";
 
-let waarschuwingGegeven = false;
-const alarmAudio = new Audio("https://actions.google.com/sounds/v1/alarms/medium_bell.ogg");
-
-const instructies = {
+/* -------------------------------
+   Teksten per taal & onderzoek
+-------------------------------- */
+const teksten = {
   nl: {
-    botscan: "U mag zich begeven naar wachtzaal D0W3.\nGelieve net voor het onderzoek uw blaas te ledigen.",
-    schildklier: "U mag zich begeven naar wachtzaal D0W3.",
-    mibi: "Gelieve een vettig ontbijt (boterham met kaas of salami) te nemen."
+    titel: "Uw wachttijd",
+    botscan: {
+      start: "Gelieve enkele glazen water te drinken.",
+      vijfmin: "U mag zich begeven naar wachtzaal D0W3.\nGelieve net voor het onderzoek uw blaas te ledigen."
+    },
+    schildklier: {
+      start: "Gelieve plaats te nemen in de wachtzaal.",
+      vijfmin: "U mag zich begeven naar wachtzaal D0W3."
+    },
+    mibi: {
+      start: "Gelieve een vettig ontbijt te nemen (boterham met kaas of salami).",
+      vijfmin: "U mag zich begeven naar wachtzaal D0W3."
+    }
   },
+
   fr: {
-    botscan: "Vous pouvez vous rendre à la salle d'attente D0W3.\nVeuillez vider votre vessie juste avant l'examen.",
-    schildklier: "Vous pouvez vous rendre à la salle d'attente D0W3.",
-    mibi: "Veuillez prendre un petit déjeuner gras (pain avec fromage ou salami)."
+    titel: "Votre temps d’attente",
+    botscan: {
+      start: "Veuillez boire plusieurs verres d’eau.",
+      vijfmin: "Vous pouvez vous rendre à la salle d’attente D0W3.\nVeuillez vider votre vessie juste avant l’examen."
+    },
+    schildklier: {
+      start: "Veuillez prendre place dans la salle d’attente.",
+      vijfmin: "Vous pouvez vous rendre à la salle d’attente D0W3."
+    },
+    mibi: {
+      start: "Veuillez prendre un petit-déjeuner gras (fromage ou salami).",
+      vijfmin: "Vous pouvez vous rendre à la salle d’attente D0W3."
+    }
   },
+
   en: {
-    botscan: "You may go to waiting room D0W3.\nPlease empty your bladder just before the exam.",
-    schildklier: "You may go to waiting room D0W3.",
-    mibi: "Please have a fatty breakfast (bread with cheese or salami)."
+    titel: "Your waiting time",
+    botscan: {
+      start: "Please drink several glasses of water.",
+      vijfmin: "You may proceed to waiting room D0W3.\nPlease empty your bladder just before the examination."
+    },
+    schildklier: {
+      start: "Please take a seat in the waiting area.",
+      vijfmin: "You may proceed to waiting room D0W3."
+    },
+    mibi: {
+      start: "Please eat a fatty breakfast (cheese or salami sandwich).",
+      vijfmin: "You may proceed to waiting room D0W3."
+    }
   },
+
   uk: {
-    botscan: "Ви можете піти до зали очікування D0W3.\nБудь ласка, спорожніть сечовий міхур безпосередньо перед обстеженням.",
-    schildklier: "Ви можете піти до зали очікування D0W3.",
-    mibi: "Будь ласка, з’їжте жирний сніданок (хліб з сиром або салямі)."
+    titel: "Ваш час очікування",
+    botscan: {
+      start: "Будь ласка, випийте кілька склянок води.",
+      vijfmin: "Ви можете пройти до зали очікування D0W3.\nБудь ласка, спорожніть сечовий міхур перед обстеженням."
+    },
+    schildklier: {
+      start: "Будь ласка, сядьте в залі очікування.",
+      vijfmin: "Ви можете пройти до зали очікування D0W3."
+    },
+    mibi: {
+      start: "Будь ласка, з’їжте жирний сніданок (бутерброд з сиром або салямі).",
+      vijfmin: "Ви можете пройти до зали очікування D0W3."
+    }
   }
 };
 
-function startTimer() {
-  const interval = setInterval(() => {
-    const diff = end - Date.now();
-    const timerDiv = document.getElementById("timer");
-    const instrDiv = document.getElementById("instructie");
+/* -------------------------------
+   Titel instellen
+-------------------------------- */
+document.getElementById("titel").textContent =
+  teksten[lang]?.titel || teksten.nl.titel;
 
-    if (diff <= 0) {
-      timerDiv.innerText = "U bent aan de beurt";
-      instrDiv.innerText = instructies[lang][onderzoek];
-      clearInterval(interval);
-    } else {
-      const min = Math.floor(diff/60000);
-      const sec = Math.floor((diff%60000)/1000);
-      timerDiv.innerText = `${min} min ${sec} sec`;
+/* -------------------------------
+   Instructies tonen
+-------------------------------- */
+const instructieEl = document.getElementById("instructie");
+const instructies = teksten[lang]?.[onderzoek] || teksten.nl[onderzoek];
 
-      if (!waarschuwingGegeven && diff <= 5*60000) {
-        waarschuwingGegeven = true;
-        timerDiv.style.color = "red";
-        timerDiv.innerText += " (nog 5 minuten!)";
-        instrDiv.innerText = instructies[lang][onderzoek];
-        if (navigator.vibrate) navigator.vibrate([500,200,500]);
-        alarmAudio.play().catch(()=>{});
-        setTimeout(()=>{alarmAudio.play().catch(()=>{});},800);
-      }
+// startboodschap
+if (instructies?.start) {
+  instructieEl.textContent = instructies.start;
+}
+
+/* -------------------------------
+   Timer + 5-minuten-moment
+-------------------------------- */
+let vijfMinGetoond = false;
+
+function updateTimer() {
+  const nu = Date.now();
+  const resterend = endTs - nu;
+
+  if (resterend <= 0) {
+    document.getElementById("timer").textContent = "00:00";
+    return;
+  }
+
+  const min = Math.floor(resterend / 60000);
+  const sec = Math.floor((resterend % 60000) / 1000);
+  document.getElementById("timer").textContent =
+    `${String(min).padStart(2,"0")}:${String(sec).padStart(2,"0")}`;
+
+  // 5 minuten-melding
+  if (resterend <= 5 * 60000 && !vijfMinGetoond) {
+    if (instructies?.vijfmin) {
+      instructieEl.textContent = instructies.vijfmin;
     }
-  }, 1000);
+    vijfMinGetoond = true;
+
+    // trilsignaal (alleen met user interaction mogelijk op iOS)
+    if (navigator.vibrate) {
+      navigator.vibrate([300, 200, 300]);
+    }
+  }
 }
 
-// Start timer
-if (!end) {
-  document.getElementById("timer").innerText = "Geen wachttijd ingesteld";
-} else {
-  startTimer();
-}
+updateTimer();
+setInterval(updateTimer, 1000);
 </script>
 
 </body>
