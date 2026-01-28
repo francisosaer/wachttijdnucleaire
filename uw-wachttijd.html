@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="">
+<html lang="nl">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,36 +8,48 @@
 <style>
   body {
     font-family: Arial, sans-serif;
-    padding: 30px;
     text-align: center;
-    max-width: 420px;
-    margin: auto;
+    padding: 30px;
+    background: #f7f9fb;
   }
 
   h1 {
     margin-bottom: 15px;
   }
 
-  .timer {
-    font-size: 48px;
+  #timer {
+    font-size: 3em;
     font-weight: bold;
-    margin: 20px 0;
-    color: black;
+    margin: 15px 0;
   }
 
-  .timer.rood {
-    color: red;
+  .timer-rood {
+    color: #c62828;
   }
 
-  .terugkomtijd {
-    font-size: 20px;
-    color: #555;
-    margin-top: 6px;
+  #exactTijd {
+    font-size: 1.3em;
+    color: #444;
+    margin-bottom: 15px;
   }
 
-  .instructie {
-    font-size: 18px;
+  #instructie {
+    font-size: 1.2em;
+    margin-top: 15px;
+    color: #333;
+  }
+
+  .boodschap-groen {
+    color: #2e7d32;
+    font-weight: 600;
+    font-size: 1.25em;
     margin-top: 25px;
+    opacity: 0;
+    transition: opacity 0.8s ease-in;
+  }
+
+  .fade-in {
+    opacity: 1;
   }
 </style>
 </head>
@@ -46,179 +58,117 @@
 
 <h1 id="titel"></h1>
 
-<div class="timer" id="timer">--</div>
-<div class="terugkomtijd" id="terugkomtijd"></div>
-<div class="instructie" id="instructie"></div>
+<div id="exactTijd"></div> <!-- Terugkomtijd bovenaan -->
+<div id="timer">--</div>
+<div id="instructie"></div>
+<div id="boodschap" class="boodschap-groen"></div>
 
 <script>
-/* -------------------------------
-   Parameters
--------------------------------- */
+/* ===== URL PARAMETERS ===== */
 const params = new URLSearchParams(window.location.search);
 const endTs = Number(params.get("end"));
-const onderzoek = params.get("onderzoek");
+const onderzoek = params.get("onderzoek") || "botscan";
 const lang = params.get("lang") || "nl";
 
-/* -------------------------------
-   Teksten
--------------------------------- */
-const teksten = {
+/* ===== VERTALINGEN ===== */
+const vertalingen = {
   nl: {
     titel: "Uw wachttijd",
-    terug: "Terugkomen om",
-    botscan: {
-      start: "Gelieve enkele glazen water te drinken.",
-      vijfmin: "U mag zich begeven naar wachtzaal D0W3.\nGelieve net voor het onderzoek uw blaas te ledigen."
+    instructies: {
+      botscan: "Gelieve enkele glazen water te drinken.",
+      schildklier: "Gelieve plaats te nemen in de wachtzaal.",
+      mibi: "Gelieve een vettig ontbijt te nemen (boterham met kaas of salami)."
     },
-    schildklier: {
-      start: "Gelieve plaats te nemen in de wachtzaal.",
-      vijfmin: "U mag zich begeven naar wachtzaal D0W3."
-    },
-    mibi: {
-      start: "Gelieve een vettig ontbijt te nemen (boterham met kaas of salami).",
-      vijfmin: "U mag zich begeven naar wachtzaal D0W3."
-    }
+    naarWachtzaal: "U mag zich begeven naar de wachtzaal DOW3."
   },
-
   fr: {
     titel: "Votre temps d’attente",
-    terug: "Revenir à",
-    botscan: {
-      start: "Veuillez boire plusieurs verres d’eau.",
-      vijfmin: "Vous pouvez vous rendre à la salle d’attente D0W3.\nVeuillez vider votre vessie avant l’examen."
+    instructies: {
+      botscan: "Veuillez boire plusieurs verres d’eau.",
+      schildklier: "Veuillez prendre place dans la salle d’attente.",
+      mibi: "Veuillez prendre un petit-déjeuner gras (pain avec fromage ou salami)."
     },
-    schildklier: {
-      start: "Veuillez prendre place dans la salle d’attente.",
-      vijfmin: "Vous pouvez vous rendre à la salle d’attente D0W3."
-    },
-    mibi: {
-      start: "Veuillez prendre un petit-déjeuner gras (fromage ou salami).",
-      vijfmin: "Vous pouvez vous rendre à la salle d’attente D0W3."
-    }
+    naarWachtzaal: "Veuillez vous rendre dans la salle d’attente DOW3."
   },
-
   en: {
     titel: "Your waiting time",
-    terug: "Please return at",
-    botscan: {
-      start: "Please drink several glasses of water.",
-      vijfmin: "You may proceed to waiting room D0W3.\nPlease empty your bladder before the examination."
+    instructies: {
+      botscan: "Please drink several glasses of water.",
+      schildklier: "Please take a seat in the waiting area.",
+      mibi: "Please have a fatty breakfast (bread with cheese or salami)."
     },
-    schildklier: {
-      start: "Please take a seat in the waiting area.",
-      vijfmin: "You may proceed to waiting room D0W3."
-    },
-    mibi: {
-      start: "Please eat a fatty breakfast (cheese or salami sandwich).",
-      vijfmin: "You may proceed to waiting room D0W3."
-    }
+    naarWachtzaal: "Please proceed to the waiting area DOW3."
   },
-
   uk: {
-    titel: "Ваш час очікування",
-    terug: "Повернутися о",
-    botscan: {
-      start: "Будь ласка, випийте кілька склянок води.",
-      vijfmin: "Ви можете пройти до зали очікування D0W3.\nСпорожніть сечовий міхур перед обстеженням."
+    titel: "Час очікування",
+    instructies: {
+      botscan: "Будь ласка, випийте кілька склянок води.",
+      schildklier: "Будь ласка, займіть місце в залі очікування.",
+      mibi: "Будь ласка, з’їжте жирний сніданок (хліб з сиром або салямі)."
     },
-    schildklier: {
-      start: "Будь ласка, сядьте в залі очікування.",
-      vijfmin: "Ви можете пройти до зали очікування D0W3."
-    },
-    mibi: {
-      start: "Будь ласка, з’їжте жирний сніданок (бутерброд з сиром або салямі).",
-      vijfmin: "Ви можете пройти до зали очікування D0W3."
-    }
+    naarWachtzaal: "Будь ласка, пройдіть до зали очікування DOW3."
   }
 };
 
-const t = teksten[lang] || teksten.nl;
+/* ===== ELEMENTEN ===== */
+const timerEl = document.getElementById("timer");
+const exactTijdEl = document.getElementById("exactTijd");
+const instructieEl = document.getElementById("instructie");
+const boodschapEl = document.getElementById("boodschap");
 
-/* -------------------------------
-   Titel & startboodschap
--------------------------------- */
-document.getElementById("titel").textContent = t.titel;
-document.getElementById("instructie").textContent =
-  t[onderzoek]?.start || "";
+/* ===== TITEL & INSTRUCTIE ===== */
+document.getElementById("titel").textContent =
+  vertalingen[lang]?.titel || vertalingen.nl.titel;
 
-/* -------------------------------
-   Exact uur
--------------------------------- */
+instructieEl.textContent =
+  vertalingen[lang]?.instructies[onderzoek] ||
+  vertalingen.nl.instructies.botscan;
+
+/* ===== EXACT TERUGKOMTIJD ===== */
 const eindDatum = new Date(endTs);
-const uurTekst =
-  String(eindDatum.getHours()).padStart(2,"0") + ":" +
-  String(eindDatum.getMinutes()).padStart(2,"0");
+exactTijdEl.textContent = "Terugkomtijd: " + 
+  eindDatum.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 
-document.getElementById("terugkomtijd").textContent =
-  `${t.terug} ${uurTekst}`;
+/* ===== TIMER ===== */
+let meldingGetoond = false;
+let trillingGedaan = false;
 
-/* -------------------------------
-   Vibratie: iOS-passieve activatie
--------------------------------- */
-let vibratieToegelaten = false;
+function formatTijd(ms) {
+  const s = Math.max(0, Math.floor(ms / 1000));
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  const sec = s % 60;
 
-// eerste willekeurige tik is voldoende
-document.addEventListener("touchstart", () => {
-  vibratieToegelaten = true;
-}, { once: true });
-
-document.addEventListener("click", () => {
-  vibratieToegelaten = true;
-}, { once: true });
-
-/* -------------------------------
-   Timer
--------------------------------- */
-let vijfMinGetoond = false;
-
-function updateTimer() {
-  const nu = Date.now();
-  const resterend = endTs - nu;
-
-  if (resterend <= 0) {
-    document.getElementById("timer").textContent = "00:00";
-    return;
-  }
-
-  const totaalSec = Math.floor(resterend / 1000);
-
-const uren = Math.floor(totaalSec / 3600);
-const minuten = Math.floor((totaalSec % 3600) / 60);
-const seconden = totaalSec % 60;
-
-let tijdTekst = "";
-
-if (uren > 0) {
-  tijdTekst =
-    `${uren} h ` +
-    `${String(minuten).padStart(2,"0")} min ` +
-    `${String(seconden).padStart(2,"0")} s`;
-} else {
-  tijdTekst =
-    `${minuten} min ` +
-    `${String(seconden).padStart(2,"0")} s`;
+  return (h > 0 ? `${h}u ` : "") + `${m} min ${sec.toString().padStart(2,"0")} s`;
 }
 
-document.getElementById("timer").textContent = tijdTekst;
+function updateTimer() {
+  const resterend = endTs - Date.now();
+  timerEl.textContent = formatTijd(resterend);
 
+  if (resterend <= 5*60*1000) {
+    timerEl.classList.add("timer-rood");
 
-  if (resterend <= 5 * 60000 && !vijfMinGetoond) {
-    vijfMinGetoond = true;
-
-    document.getElementById("timer").classList.add("rood");
-    document.getElementById("instructie").textContent =
-      t[onderzoek]?.vijfmin || "";
-
-    if (navigator.vibrate && vibratieToegelaten) {
-      navigator.vibrate([300,200,300]);
+    if (!meldingGetoond) {
+      boodschapEl.textContent = vertalingen[lang].naarWachtzaal;
+      boodschapEl.classList.add("fade-in");
+      meldingGetoond = true;
     }
+
+    if (!trillingGedaan && navigator.vibrate) {
+      navigator.vibrate([300,200,300]);
+      trillingGedaan = true;
+    }
+  }
+
+  if (resterend <= 0) {
+    timerEl.textContent = "0 min 00 s";
   }
 }
 
 updateTimer();
-setInterval(updateTimer, 1000);
+setInterval(updateTimer,1000);
 </script>
 
 </body>
 </html>
-
