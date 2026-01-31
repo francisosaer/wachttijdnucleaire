@@ -104,17 +104,17 @@
 <script>
 let geselecteerdOnderzoek = null;
 
-// Emoji en onderzoeken
+// Onderzoeken en emoji definitie
 const container = document.querySelector(".onderzoeken");
 
 const onderzoeken = [
-  {code: "botscan", emoji: "\uD83D\uDC80", naam: "Botscan"},       // 💀 schedel
-  {code: "schildklier", emoji: "\uD83E\uDD8B", naam: "Schildklierscan"}, // 🦋 vlinder
-  {code: "mibi", emoji: "\u2764\uFE0F", naam: "MIBI-scan"},        // ❤️ hart
-  {code: "dmsa", emoji: "\uD83E\uDE7A", naam: "DMSA-scan", dubbel: true} // 🫘 nier
+  {code: "botscan", emoji: "💀", naam: "Botscan"},       // schedel
+  {code: "schildklier", emoji: "🦋", naam: "Schildklierscan"}, // vlinder
+  {code: "mibi", emoji: "❤️", naam: "MIBI-scan"},        // hart
+  {code: "dmsa", emoji: "🫘", naam: "DMSA-scan", dubbel: true} // nier/boon
 ];
 
-// Voeg emoji dynamisch toe
+// Voeg onderzoeken dynamisch toe
 onderzoeken.forEach(o => {
   const div = document.createElement("div");
   div.className = "optie";
@@ -123,8 +123,8 @@ onderzoeken.forEach(o => {
   const span = document.createElement("span");
 
   if (o.dubbel) {
-    // 2 nierbonen naast elkaar, tweede gespiegeld
-    span.innerHTML = `<span>${o.emoji}</span><span class="flipped">${o.emoji}</span>`;
+    // VEILIGE FIX: 2 nierbonen naast elkaar, tweede gespiegeld
+    span.innerHTML = '<span>🫘</span><span class="flipped">🫘</span>';
   } else {
     span.textContent = o.emoji;
   }
