@@ -55,7 +55,13 @@
     gap: 5px;
   }
 
-  .optie span.flipped {
+  /* DMSA kidney-boon afbeeldingen */
+  .dmsa-img {
+    width: 32px; /* pas aan naar wens */
+    margin-right: 5px;
+  }
+
+  .dmsa-img.flipped {
     transform: scaleX(-1);
   }
 
@@ -104,14 +110,14 @@
 <script>
 let geselecteerdOnderzoek = null;
 
-// Onderzoeken en emoji definitie
+// Onderzoeken en emoji / afbeeldingen
 const container = document.querySelector(".onderzoeken");
 
 const onderzoeken = [
   {code: "botscan", emoji: "💀", naam: "Botscan"},       // schedel
   {code: "schildklier", emoji: "🦋", naam: "Schildklierscan"}, // vlinder
   {code: "mibi", emoji: "❤️", naam: "MIBI-scan"},        // hart
-  {code: "dmsa", emoji: "🫘", naam: "DMSA-scan", dubbel: true} // nier/boon
+  {code: "dmsa", emoji: "🫘", naam: "DMSA-scan", dubbel: true} // nier/boon afbeelding
 ];
 
 // Voeg onderzoeken dynamisch toe
@@ -123,8 +129,8 @@ onderzoeken.forEach(o => {
   const span = document.createElement("span");
 
   if (o.dubbel) {
-    // VEILIGE FIX: 2 nierbonen naast elkaar, tweede gespiegeld
-    span.innerHTML = '<span>🫘</span><span class="flipped">🫘</span>';
+    // Gebruik afbeelding voor DMSA, tweede gespiegeld
+    span.innerHTML = '<img src="kidney.png" class="dmsa-img"><img src="kidney.png" class="dmsa-img flipped">';
   } else {
     span.textContent = o.emoji;
   }
