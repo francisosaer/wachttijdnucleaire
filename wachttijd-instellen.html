@@ -33,6 +33,10 @@
     color: black;
   }
 
+  input[type="tel"]::placeholder {
+    color: #888;
+  }
+
   .onderzoeken {
     margin-top: 10px;
   }
@@ -55,7 +59,6 @@
     gap: 2px;
   }
 
-  /* Afbeeldingen voor onderzoeken */
   .onderzoek-img {
     width: 32px;
     margin-right: 2px;
@@ -96,7 +99,7 @@
 <input type="time" id="tijd">
 
 <label>Telefoonnummer patiënt</label>
-<input type="tel" id="phone" value="04">
+<input type="tel" id="phone" value="04" placeholder="04********" maxlength="10">
 
 <label>Selecteer taal</label>
 <select id="taal">
@@ -129,10 +132,8 @@ onderzoeken.forEach(o => {
   const span = document.createElement("span");
 
   if (o.dubbel) {
-    // DMSA: 2 kidney-bonen, tweede gespiegeld
     span.innerHTML = `<img src="${o.afbeelding}" class="onderzoek-img"><img src="${o.afbeelding}" class="onderzoek-img flipped">`;
   } else if (o.afbeelding) {
-    // Andere afbeeldingen
     span.innerHTML = `<img src="${o.afbeelding}" class="onderzoek-img">`;
   } else if (o.emoji) {
     span.textContent = o.emoji;
@@ -154,12 +155,18 @@ document.querySelectorAll(".optie").forEach(optie => {
 
 // Verstuur SMS
 document.getElementById("verstuur").addEventListener("click", () => {
+  let telefoon = document.getElementById("phone").value.replace(/\D/g, ""); // alleen cijfers
   const tijd = document.getElementById("tijd").value;
-  const telefoon = document.getElementById("phone").value;
   const taal = document.getElementById("taal").value;
 
-  if (!tijd || !geselecteerdOnderzoek || telefoon.length < 6) {
+  if (!tijd || !geselecteerdOnderzoek) {
     alert("Gelieve alle velden correct in te vullen.");
+    return;
+  }
+
+  // Belgische gsm-validatie: 10 cijfers, startend met 04
+  if (!/^04\d{8}$/.test(telefoon)) {
+    alert("Gelieve een correct gsm-nummer in te vullen (startend met 04, 10 cijfers).");
     return;
   }
 
@@ -167,7 +174,6 @@ document.getElementById("verstuur").addEventListener("click", () => {
   const nu = new Date();
   const eindtijd = new Date();
   eindtijd.setHours(uur, min, 0, 0);
-
   if (eindtijd < nu) eindtijd.setDate(eindtijd.getDate() + 1);
 
   const endTs = eindtijd.getTime();
