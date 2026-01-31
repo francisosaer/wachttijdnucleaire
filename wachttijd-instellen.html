@@ -52,18 +52,18 @@
     font-size: 26px;
     margin-right: 12px;
     display: flex;
-    gap: 0; /* geen extra ruimte tussen afbeeldingen */
+    gap: 2px;
   }
 
-  /* DMSA kidney-boon afbeeldingen */
-  .dmsa-img {
-    width: 32px;       /* grootte van de boon */
-    margin-right: 2px; /* kleine ruimte tussen de twee bonen */
+  /* Afbeeldingen voor onderzoeken */
+  .onderzoek-img {
+    width: 32px;
+    margin-right: 2px;
   }
 
-  .dmsa-img.flipped {
+  .onderzoek-img.flipped {
     transform: scaleX(-1);
-    margin-right: 0;   /* geen extra ruimte voor de tweede */
+    margin-right: 0;
   }
 
   .optie.actief {
@@ -90,7 +90,7 @@
 <h1>Wachttijd instellen</h1>
 
 <label>Selecteer onderzoek</label>
-<div class="onderzoeken"></div> <!-- Emoji worden via JS toegevoegd -->
+<div class="onderzoeken"></div>
 
 <label>Selecteer terugkomtijd</label>
 <input type="time" id="tijd">
@@ -110,18 +110,17 @@
 
 <script>
 let geselecteerdOnderzoek = null;
-
-// Onderzoeken en emoji / afbeeldingen
 const container = document.querySelector(".onderzoeken");
 
 const onderzoeken = [
-  {code: "botscan", emoji: "💀", naam: "Botscan"},       // schedel
-  {code: "schildklier", emoji: "🦋", naam: "Schildklierscan"}, // vlinder
-  {code: "mibi", emoji: "❤️", naam: "MIBI-scan"},        // hart
-  {code: "dmsa", emoji: "🫘", naam: "DMSA-scan", dubbel: true} // nier/boon afbeelding
+  {code: "botscan", naam: "Botscan", afbeelding: "skelet.png"},
+  {code: "schildklier", naam: "Schildklierscan", afbeelding: "schildklier.png"},
+  {code: "mibi", naam: "MIBI-scan", emoji: "❤️"},
+  {code: "dmsa", naam: "DMSA-scan", afbeelding: "nier.png", dubbel: true},
+  {code: "maag", naam: "Maagontleding", afbeelding: "maag.png"},
+  {code: "dat", naam: "DAT-scan", emoji: "🧠"}
 ];
 
-// Voeg onderzoeken dynamisch toe
 onderzoeken.forEach(o => {
   const div = document.createElement("div");
   div.className = "optie";
@@ -130,9 +129,12 @@ onderzoeken.forEach(o => {
   const span = document.createElement("span");
 
   if (o.dubbel) {
-    // Gebruik nier-afbeelding voor DMSA, tweede gespiegeld
-    span.innerHTML = '<img src="nier.png" class="dmsa-img"><img src="nier.png" class="dmsa-img flipped">';
-  } else {
+    // DMSA: 2 kidney-bonen, tweede gespiegeld
+    span.innerHTML = `<img src="${o.afbeelding}" class="onderzoek-img"><img src="${o.afbeelding}" class="onderzoek-img flipped">`;
+  } else if (o.afbeelding) {
+    // Andere afbeeldingen
+    span.innerHTML = `<img src="${o.afbeelding}" class="onderzoek-img">`;
+  } else if (o.emoji) {
     span.textContent = o.emoji;
   }
 
@@ -161,19 +163,15 @@ document.getElementById("verstuur").addEventListener("click", () => {
     return;
   }
 
-  // Eindtijd berekenen
   const [uur, min] = tijd.split(":").map(Number);
   const nu = new Date();
   const eindtijd = new Date();
   eindtijd.setHours(uur, min, 0, 0);
 
-  if (eindtijd < nu) {
-    eindtijd.setDate(eindtijd.getDate() + 1);
-  }
+  if (eindtijd < nu) eindtijd.setDate(eindtijd.getDate() + 1);
 
   const endTs = eindtijd.getTime();
 
-  // Absolute URL opbouwen (SMS-veilig)
   const basisPad = window.location.href
     .split("/")
     .slice(0, -1)
@@ -181,11 +179,8 @@ document.getElementById("verstuur").addEventListener("click", () => {
 
   const link = `${basisPad}/uw-wachttijd.html?end=${endTs}&onderzoek=${geselecteerdOnderzoek}&lang=${taal}`;
 
-  const smsTekst = encodeURIComponent(
-    "Uw wachttijd:\n" + link
-  );
+  const smsTekst = encodeURIComponent("Uw wachttijd:\n" + link);
 
-  // iPhone vs Android SMS-regel
   const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
   const smsLink = isIOS
     ? `sms:${telefoon}&body=${smsTekst}`
