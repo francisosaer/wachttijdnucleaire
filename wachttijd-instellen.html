@@ -51,6 +51,12 @@
   .optie span {
     font-size: 26px;
     margin-right: 12px;
+    display: flex;
+    gap: 5px;
+  }
+
+  .optie span.flipped {
+    transform: scaleX(-1);
   }
 
   .optie.actief {
@@ -78,15 +84,7 @@
 
 <label>Selecteer onderzoek</label>
 <div class="onderzoeken">
-  <div class="optie" data-onderzoek="botscan">
-    <span>💀</span> Botscan
-  </div>
-  <div class="optie" data-onderzoek="schildklier">
-    <span>🦋</span> Schildklierscan
-  </div>
-  <div class="optie" data-onderzoek="mibi">
-    <span>❤️</span> MIBI-scan
-  </div>
+  <!-- Emoji worden via JS toegevoegd -->
 </div>
 
 <label>Selecteer terugkomtijd</label>
@@ -106,6 +104,40 @@
 <button id="verstuur">Genereer link & verstuur SMS</button>
 
 <script>
+// Onderzoeken array met Unicode emoji
+const onderzoeken = [
+  {code: "botscan", emoji: "\uD83D\uDC80", naam: "Botscan"},       // 💀
+  {code: "schildklier", emoji: "\uD83E\uDE91", naam: "Schildklierscan"}, // 🪑
+  {code: "mibi", emoji: "\uD83E\uDD6A", naam: "MIBI-scan"},        // 🥪
+  {code: "dmsa", emoji: "\uD83E\uDE7A", naam: "DMSA-scan", dubbel: true} // 🫘
+];
+
+// Container vullen
+const container = document.querySelector(".onderzoeken");
+onderzoeken.forEach(o => {
+  const div = document.createElement("div");
+  div.className = "optie";
+  div.dataset.onderzoek = o.code;
+
+  const span = document.createElement("span");
+
+  if (o.dubbel) {
+    const bean1 = document.createElement("span");
+    bean1.textContent = o.emoji;
+    const bean2 = document.createElement("span");
+    bean2.textContent = o.emoji;
+    bean2.className = "flipped";
+    span.appendChild(bean1);
+    span.appendChild(bean2);
+  } else {
+    span.textContent = o.emoji;
+  }
+
+  div.appendChild(span);
+  div.appendChild(document.createTextNode(" " + o.naam));
+  container.appendChild(div);
+});
+
 let geselecteerdOnderzoek = null;
 
 // Onderzoek selecteren
