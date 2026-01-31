@@ -24,17 +24,13 @@
   }
 
   input[type="time"],
-  input[type="tel"],
+  input[type="text"],
   select {
     width: 100%;
     padding: 12px;
     font-size: 16px;
     margin-top: 8px;
     color: black;
-  }
-
-  input[type="tel"]::placeholder {
-    color: #888;
   }
 
   .onderzoeken {
@@ -85,12 +81,6 @@
     border: none;
     border-radius: 8px;
   }
-
-  #tel-feedback {
-    font-size: 16px;
-    margin-left: 10px;
-    color: #888;
-  }
 </style>
 </head>
 
@@ -105,10 +95,7 @@
 <input type="time" id="tijd">
 
 <label>Telefoonnummer patiënt</label>
-<div style="display:flex; align-items:center;">
-  <input type="tel" id="phone" value="04" maxlength="10" placeholder="04xxxxxxxx">
-  <span id="tel-feedback"></span>
-</div>
+<input type="text" id="phone" maxlength="10" placeholder="04********">
 
 <label>Selecteer taal</label>
 <select id="taal">
@@ -122,6 +109,7 @@
 
 <script>
 let geselecteerdOnderzoek = null;
+let echteCijfers = "04"; // begin altijd met 04
 const container = document.querySelector(".onderzoeken");
 
 const onderzoeken = [
@@ -163,24 +151,29 @@ document.querySelectorAll(".optie").forEach(optie => {
   });
 });
 
-// GSM input feedback
+// Input masking met sterretjes IN het veld
 const phoneInput = document.getElementById("phone");
-const feedback = document.getElementById("tel-feedback");
+phoneInput.value = echteCijfers + "*".repeat(8);
 
-phoneInput.addEventListener("input", () => {
-  let val = phoneInput.value.replace(/\D/g, ""); // alleen cijfers
-  if (!val.startsWith("04")) val = "04"; // altijd 04 aan het begin
+phoneInput.addEventListener("keydown", e => {
+  const pos = phoneInput.selectionStart;
+  if (pos < 2 && (e.key === "Backspace" || e.key === "Delete")) {
+    e.preventDefault(); // 04 kan niet verwijderd worden
+  }
+});
+
+phoneInput.addEventListener("input", e => {
+  let val = phoneInput.value.replace(/\D/g,""); // alleen cijfers
+  if (!val.startsWith("04")) val = "04";
   if (val.length > 10) val = val.slice(0,10);
-  phoneInput.value = val;
-
-  // feedback met sterretjes
-  const resterend = 10 - val.length;
-  feedback.textContent = resterend > 0 ? "*".repeat(resterend) : "";
+  echteCijfers = val;
+  const resterend = 10 - echteCijfers.length;
+  phoneInput.value = echteCijfers + "*".repeat(Math.max(0, resterend));
 });
 
 // Verstuur SMS
 document.getElementById("verstuur").addEventListener("click", () => {
-  const telefoon = phoneInput.value.replace(/\D/g,""); // alleen cijfers
+  const telefoon = echteCijfers;
   const tijd = document.getElementById("tijd").value;
   const taal = document.getElementById("taal").value;
 
@@ -189,7 +182,6 @@ document.getElementById("verstuur").addEventListener("click", () => {
     return;
   }
 
-  // Controle gsm: 10 cijfers, startend met 04
   if (!/^04\d{8}$/.test(telefoon)) {
     alert("Gelieve een correct gsm-nummer in te vullen (startend met 04, 10 cijfers).");
     return;
