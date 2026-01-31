@@ -52,17 +52,18 @@
     font-size: 26px;
     margin-right: 12px;
     display: flex;
-    gap: 5px;
+    gap: 0; /* geen extra ruimte tussen afbeeldingen */
   }
 
   /* DMSA kidney-boon afbeeldingen */
   .dmsa-img {
-    width: 32px; /* pas aan naar wens */
-    margin-right: 5px;
+    width: 32px;       /* grootte van de boon */
+    margin-right: 2px; /* kleine ruimte tussen de twee bonen */
   }
 
   .dmsa-img.flipped {
     transform: scaleX(-1);
+    margin-right: 0;   /* geen extra ruimte voor de tweede */
   }
 
   .optie.actief {
@@ -129,7 +130,7 @@ onderzoeken.forEach(o => {
   const span = document.createElement("span");
 
   if (o.dubbel) {
-    // Gebruik afbeelding voor DMSA, tweede gespiegeld
+    // Gebruik nier-afbeelding voor DMSA, tweede gespiegeld
     span.innerHTML = '<img src="nier.png" class="dmsa-img"><img src="nier.png" class="dmsa-img flipped">';
   } else {
     span.textContent = o.emoji;
@@ -196,4 +197,3 @@ document.getElementById("verstuur").addEventListener("click", () => {
 
 </body>
 </html>
-
