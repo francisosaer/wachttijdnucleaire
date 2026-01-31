@@ -83,9 +83,7 @@
 <h1>Wachttijd instellen</h1>
 
 <label>Selecteer onderzoek</label>
-<div class="onderzoeken">
-  <!-- Emoji worden via JS toegevoegd -->
-</div>
+<div class="onderzoeken"></div> <!-- Emoji worden via JS toegevoegd -->
 
 <label>Selecteer terugkomtijd</label>
 <input type="time" id="tijd">
@@ -104,16 +102,19 @@
 <button id="verstuur">Genereer link & verstuur SMS</button>
 
 <script>
-// Onderzoeken array met Unicode emoji
+let geselecteerdOnderzoek = null;
+
+// Emoji en onderzoeken
+const container = document.querySelector(".onderzoeken");
+
 const onderzoeken = [
-  {code: "botscan", emoji: "\uD83D\uDC80", naam: "Botscan"},       // 💀
-  {code: "schildklier", emoji: "\uD83E\uDE91", naam: "Schildklierscan"}, // 🪑
-  {code: "mibi", emoji: "\uD83E\uDD6A", naam: "MIBI-scan"},        // 🥪
-  {code: "dmsa", emoji: "\uD83E\uDE7A", naam: "DMSA-scan", dubbel: true} // 🫘
+  {code: "botscan", emoji: "\uD83D\uDC80", naam: "Botscan"},       // 💀 schedel
+  {code: "schildklier", emoji: "\uD83E\uDD8B", naam: "Schildklierscan"}, // 🦋 vlinder
+  {code: "mibi", emoji: "\u2764\uFE0F", naam: "MIBI-scan"},        // ❤️ hart
+  {code: "dmsa", emoji: "\uD83E\uDE7A", naam: "DMSA-scan", dubbel: true} // 🫘 nier
 ];
 
-// Container vullen
-const container = document.querySelector(".onderzoeken");
+// Voeg emoji dynamisch toe
 onderzoeken.forEach(o => {
   const div = document.createElement("div");
   div.className = "optie";
@@ -122,13 +123,8 @@ onderzoeken.forEach(o => {
   const span = document.createElement("span");
 
   if (o.dubbel) {
-    const bean1 = document.createElement("span");
-    bean1.textContent = o.emoji;
-    const bean2 = document.createElement("span");
-    bean2.textContent = o.emoji;
-    bean2.className = "flipped";
-    span.appendChild(bean1);
-    span.appendChild(bean2);
+    // 2 nierbonen naast elkaar, tweede gespiegeld
+    span.innerHTML = `<span>${o.emoji}</span><span class="flipped">${o.emoji}</span>`;
   } else {
     span.textContent = o.emoji;
   }
@@ -137,8 +133,6 @@ onderzoeken.forEach(o => {
   div.appendChild(document.createTextNode(" " + o.naam));
   container.appendChild(div);
 });
-
-let geselecteerdOnderzoek = null;
 
 // Onderzoek selecteren
 document.querySelectorAll(".optie").forEach(optie => {
@@ -149,6 +143,7 @@ document.querySelectorAll(".optie").forEach(optie => {
   });
 });
 
+// Verstuur SMS
 document.getElementById("verstuur").addEventListener("click", () => {
   const tijd = document.getElementById("tijd").value;
   const telefoon = document.getElementById("phone").value;
