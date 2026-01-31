@@ -99,7 +99,7 @@
 <input type="time" id="tijd">
 
 <label>Telefoonnummer patiënt</label>
-<input type="tel" id="phone" value="04" placeholder="04********" maxlength="10">
+<input type="tel" id="phone" value="04" maxlength="10">
 
 <label>Selecteer taal</label>
 <select id="taal">
@@ -124,6 +124,7 @@ const onderzoeken = [
   {code: "dat", naam: "DAT-scan", emoji: "🧠"}
 ];
 
+// Onderzoeken toevoegen
 onderzoeken.forEach(o => {
   const div = document.createElement("div");
   div.className = "optie";
@@ -153,9 +154,20 @@ document.querySelectorAll(".optie").forEach(optie => {
   });
 });
 
+// GSM input mask voor sterretjes
+const phoneInput = document.getElementById("phone");
+phoneInput.addEventListener("input", () => {
+  let val = phoneInput.value.replace(/\D/g, ""); // alleen cijfers
+  if (!val.startsWith("04")) val = "04"; // altijd 04 aan het begin
+  let rest = val.slice(2);
+  let display = "04" + "*".repeat(Math.max(0, 8 - rest.length)) + rest;
+  if (display.length > 10) display = display.slice(0,10);
+  phoneInput.value = display;
+});
+
 // Verstuur SMS
 document.getElementById("verstuur").addEventListener("click", () => {
-  let telefoon = document.getElementById("phone").value.replace(/\D/g, ""); // alleen cijfers
+  let telefoon = phoneInput.value.replace(/\D/g,""); // alleen cijfers
   const tijd = document.getElementById("tijd").value;
   const taal = document.getElementById("taal").value;
 
@@ -164,7 +176,7 @@ document.getElementById("verstuur").addEventListener("click", () => {
     return;
   }
 
-  // Belgische gsm-validatie: 10 cijfers, startend met 04
+  // Controle gsm: 10 cijfers, startend met 04
   if (!/^04\d{8}$/.test(telefoon)) {
     alert("Gelieve een correct gsm-nummer in te vullen (startend met 04, 10 cijfers).");
     return;
@@ -177,14 +189,8 @@ document.getElementById("verstuur").addEventListener("click", () => {
   if (eindtijd < nu) eindtijd.setDate(eindtijd.getDate() + 1);
 
   const endTs = eindtijd.getTime();
-
-  const basisPad = window.location.href
-    .split("/")
-    .slice(0, -1)
-    .join("/");
-
+  const basisPad = window.location.href.split("/").slice(0,-1).join("/");
   const link = `${basisPad}/uw-wachttijd.html?end=${endTs}&onderzoek=${geselecteerdOnderzoek}&lang=${taal}`;
-
   const smsTekst = encodeURIComponent("Uw wachttijd:\n" + link);
 
   const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
