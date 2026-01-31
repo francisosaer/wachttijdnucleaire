@@ -24,7 +24,7 @@
   }
 
   input[type="time"],
-  input[type="text"],
+  input[type="tel"],
   select {
     width: 100%;
     padding: 12px;
@@ -95,7 +95,7 @@
 <input type="time" id="tijd">
 
 <label>Telefoonnummer patiënt</label>
-<input type="text" id="phone" maxlength="10" placeholder="04********">
+<input type="tel" id="phone" value="04" maxlength="10" placeholder="04xxxxxxxx">
 
 <label>Selecteer taal</label>
 <select id="taal">
@@ -109,7 +109,6 @@
 
 <script>
 let geselecteerdOnderzoek = null;
-let echteCijfers = "04"; // begin altijd met 04
 const container = document.querySelector(".onderzoeken");
 
 const onderzoeken = [
@@ -151,29 +150,9 @@ document.querySelectorAll(".optie").forEach(optie => {
   });
 });
 
-// Input masking met sterretjes IN het veld
-const phoneInput = document.getElementById("phone");
-phoneInput.value = echteCijfers + "*".repeat(8);
-
-phoneInput.addEventListener("keydown", e => {
-  const pos = phoneInput.selectionStart;
-  if (pos < 2 && (e.key === "Backspace" || e.key === "Delete")) {
-    e.preventDefault(); // 04 kan niet verwijderd worden
-  }
-});
-
-phoneInput.addEventListener("input", e => {
-  let val = phoneInput.value.replace(/\D/g,""); // alleen cijfers
-  if (!val.startsWith("04")) val = "04";
-  if (val.length > 10) val = val.slice(0,10);
-  echteCijfers = val;
-  const resterend = 10 - echteCijfers.length;
-  phoneInput.value = echteCijfers + "*".repeat(Math.max(0, resterend));
-});
-
 // Verstuur SMS
 document.getElementById("verstuur").addEventListener("click", () => {
-  const telefoon = echteCijfers;
+  const telefoon = document.getElementById("phone").value.replace(/\D/g,""); // alleen cijfers
   const tijd = document.getElementById("tijd").value;
   const taal = document.getElementById("taal").value;
 
@@ -182,6 +161,7 @@ document.getElementById("verstuur").addEventListener("click", () => {
     return;
   }
 
+  // Controle gsm: 10 cijfers, startend met 04
   if (!/^04\d{8}$/.test(telefoon)) {
     alert("Gelieve een correct gsm-nummer in te vullen (startend met 04, 10 cijfers).");
     return;
