@@ -85,6 +85,12 @@
     border: none;
     border-radius: 8px;
   }
+
+  #tel-feedback {
+    font-size: 16px;
+    margin-left: 10px;
+    color: #888;
+  }
 </style>
 </head>
 
@@ -99,7 +105,10 @@
 <input type="time" id="tijd">
 
 <label>Telefoonnummer patiënt</label>
-<input type="tel" id="phone" value="04" maxlength="10">
+<div style="display:flex; align-items:center;">
+  <input type="tel" id="phone" value="04" maxlength="10" placeholder="04xxxxxxxx">
+  <span id="tel-feedback"></span>
+</div>
 
 <label>Selecteer taal</label>
 <select id="taal">
@@ -154,20 +163,24 @@ document.querySelectorAll(".optie").forEach(optie => {
   });
 });
 
-// GSM input mask voor sterretjes
+// GSM input feedback
 const phoneInput = document.getElementById("phone");
+const feedback = document.getElementById("tel-feedback");
+
 phoneInput.addEventListener("input", () => {
   let val = phoneInput.value.replace(/\D/g, ""); // alleen cijfers
   if (!val.startsWith("04")) val = "04"; // altijd 04 aan het begin
-  let rest = val.slice(2);
-  let display = "04" + "*".repeat(Math.max(0, 8 - rest.length)) + rest;
-  if (display.length > 10) display = display.slice(0,10);
-  phoneInput.value = display;
+  if (val.length > 10) val = val.slice(0,10);
+  phoneInput.value = val;
+
+  // feedback met sterretjes
+  const resterend = 10 - val.length;
+  feedback.textContent = resterend > 0 ? "*".repeat(resterend) : "";
 });
 
 // Verstuur SMS
 document.getElementById("verstuur").addEventListener("click", () => {
-  let telefoon = phoneInput.value.replace(/\D/g,""); // alleen cijfers
+  const telefoon = phoneInput.value.replace(/\D/g,""); // alleen cijfers
   const tijd = document.getElementById("tijd").value;
   const taal = document.getElementById("taal").value;
 
