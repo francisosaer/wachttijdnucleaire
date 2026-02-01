@@ -206,19 +206,25 @@ function updateTimer() {
   timerEl.textContent = formatTijd(resterend);
 
   if (resterend <= 5 * 60 * 1000) {
-    timerEl.classList.add("timer-rood");
+  timerEl.classList.add("timer-rood");
 
-    if (!meldingGetoond) {
-      boodschapEl.textContent = vertalingen[lang].naarWachtzaal;
-      boodschapEl.classList.add("fade-in");
-      meldingGetoond = true;
-    }
-
-    if (!trillingGedaan && navigator.vibrate) {
-      navigator.vibrate([300, 200, 300]);
-      trillingGedaan = true;
-    }
+  // Instructie verbergen bij botscan en MIBI
+  if (onderzoek === "botscan" || onderzoek === "mibi") {
+    instructieEl.textContent = "";
   }
+
+  if (!meldingGetoond) {
+    boodschapEl.textContent = vertalingen[lang].naarWachtzaal;
+    boodschapEl.classList.add("fade-in");
+    meldingGetoond = true;
+  }
+
+  if (!trillingGedaan && navigator.vibrate) {
+    navigator.vibrate([300, 200, 300]);
+    trillingGedaan = true;
+  }
+}
+
 
   if (resterend <= 0) {
     timerEl.textContent = "0 min 00 s";
@@ -231,3 +237,4 @@ setInterval(updateTimer, 1000);
 
 </body>
 </html>
+
