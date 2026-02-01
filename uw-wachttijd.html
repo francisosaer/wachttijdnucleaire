@@ -221,26 +221,29 @@ function updateTimer() {
   const resterend = endTs - Date.now();
   timerEl.textContent = formatTijd(resterend);
 
-  if (resterend <= 5 * 60 * 1000) {
-    timerEl.classList.add("timer-rood");
+ if (resterend <= 5 * 60 * 1000) {
+  timerEl.classList.add("timer-rood");
 
-    // instructie + afbeelding weg voor botscan en MIBI
-    if (onderzoek === "botscan" || onderzoek === "mibi") {
-      instructieEl.textContent = "";
-      imgEl.style.display = "none";
-    }
-
-    if (!meldingGetoond) {
-      boodschapEl.textContent = vertalingen[lang].naarWachtzaal;
-      boodschapEl.classList.add("fade-in");
-      meldingGetoond = true;
-    }
-
-    if (!trillingGedaan && navigator.vibrate) {
-      navigator.vibrate([300, 200, 300]);
-      trillingGedaan = true;
-    }
+  // alleen botscan en MIBI instructie + afbeelding verwijderen
+  if (onderzoek === "botscan" || onderzoek === "mibi") {
+    instructieEl.textContent = "";
+    imgEl.style.display = "none";
   }
+
+  // 5-minutenboodschap alleen tonen als de instructie niet al hetzelfde zegt
+  const instructieTekst = vertalingen[lang].instructies[onderzoek].toLowerCase();
+  if (!instructieTekst.includes("begeven naar wachtzaal") && !meldingGetoond) {
+    boodschapEl.textContent = vertalingen[lang].naarWachtzaal;
+    boodschapEl.classList.add("fade-in");
+    meldingGetoond = true;
+  }
+
+  if (!trillingGedaan && navigator.vibrate) {
+    navigator.vibrate([300, 200, 300]);
+    trillingGedaan = true;
+  }
+}
+
 
   if (resterend <= 0) {
     timerEl.textContent = "0 min 00 s";
@@ -253,5 +256,6 @@ setInterval(updateTimer, 1000);
 
 </body>
 </html>
+
 
 
