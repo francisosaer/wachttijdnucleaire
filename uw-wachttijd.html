@@ -209,6 +209,9 @@ exactTijdEl.textContent =
 let meldingGetoond = false;
 let trillingGedaan = false;
 
+// Onderzoeken waarvoor geen 5-min boodschap
+const geen5MinBoodschap = ["schildklier", "maag"];
+
 function formatTijd(ms) {
   const s = Math.max(0, Math.floor(ms / 1000));
   const h = Math.floor(s / 3600);
@@ -221,29 +224,27 @@ function updateTimer() {
   const resterend = endTs - Date.now();
   timerEl.textContent = formatTijd(resterend);
 
- if (resterend <= 5 * 60 * 1000) {
-  timerEl.classList.add("timer-rood");
+  if (resterend <= 5 * 60 * 1000) {
+    timerEl.classList.add("timer-rood");
 
-  // alleen botscan en MIBI instructie + afbeelding verwijderen
-  if (onderzoek === "botscan" || onderzoek === "mibi") {
-    instructieEl.textContent = "";
-    imgEl.style.display = "none";
+    // instructie + afbeelding weg voor botscan en MIBI
+    if (onderzoek === "botscan" || onderzoek === "mibi") {
+      instructieEl.textContent = "";
+      imgEl.style.display = "none";
+    }
+
+    // toon 5-minutenboodschap alleen voor onderzoeken die niet in uitsluitlijst staan
+    if (!meldingGetoond && !geen5MinBoodschap.includes(onderzoek)) {
+      boodschapEl.textContent = vertalingen[lang].naarWachtzaal;
+      boodschapEl.classList.add("fade-in");
+      meldingGetoond = true;
+    }
+
+    if (!trillingGedaan && navigator.vibrate) {
+      navigator.vibrate([300, 200, 300]);
+      trillingGedaan = true;
+    }
   }
-
-  // 5-minutenboodschap alleen tonen als de instructie niet al hetzelfde zegt
-  const instructieTekst = vertalingen[lang].instructies[onderzoek].toLowerCase();
-  if (!instructieTekst.includes("begeven naar wachtzaal") && !meldingGetoond) {
-    boodschapEl.textContent = vertalingen[lang].naarWachtzaal;
-    boodschapEl.classList.add("fade-in");
-    meldingGetoond = true;
-  }
-
-  if (!trillingGedaan && navigator.vibrate) {
-    navigator.vibrate([300, 200, 300]);
-    trillingGedaan = true;
-  }
-}
-
 
   if (resterend <= 0) {
     timerEl.textContent = "0 min 00 s";
@@ -256,6 +257,3 @@ setInterval(updateTimer, 1000);
 
 </body>
 </html>
-
-
-
