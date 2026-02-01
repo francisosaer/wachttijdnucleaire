@@ -14,7 +14,14 @@
   }
 
   h1 {
+    margin-bottom: 5px;
+  }
+
+  #onderzoekNaam {
+    font-size: 1.2em;
+    font-weight: 600;
     margin-bottom: 15px;
+    color: #333;
   }
 
   #timer {
@@ -57,8 +64,9 @@
 <body>
 
 <h1 id="titel"></h1>
+<div id="onderzoekNaam"></div>
 
-<div id="exactTijd"></div> <!-- Terugkomtijd bovenaan -->
+<div id="exactTijd"></div>
 <div id="timer">--</div>
 <div id="instructie"></div>
 <div id="boodschap" class="boodschap-groen"></div>
@@ -70,41 +78,88 @@ const endTs = Number(params.get("end"));
 const onderzoek = params.get("onderzoek") || "botscan";
 const lang = params.get("lang") || "nl";
 
-/* ===== VERTALINGEN ===== */
+/* ===== VERTALINGEN (ZIEKENHUISSTIJL) ===== */
 const vertalingen = {
   nl: {
     titel: "Uw wachttijd",
-    instructies: {
-      botscan: "\uD83E\uDD5B Gelieve enkele glazen water te drinken.",
-      schildklier: "\uD83E\uDE91 Gelieve plaats te nemen in de wachtzaal",
-      mibi: "\uD83E\uDD6A Gelieve een vettig ontbijt te nemen (boterham met kaas of salami)."
+    onderzoeken: {
+      botscan: "Botscan",
+      schildklier: "Schildklierscan",
+      mibi: "MIBI-scan",
+      dmsa: "DMSA-scan",
+      maag: "Maagontlediging",
+      dat: "DAT-scan"
     },
-    naarWachtzaal: "\uD83E\uDE91 U mag zich begeven naar wachtzaal DOW3."
+    instructies: {
+      botscan: "Wij vragen u om regelmatig water te drinken.",
+      schildklier: "U mag plaatsnemen in de wachtzaal.",
+      mibi: "Gelieve een vet ontbijt te gebruiken, bijvoorbeeld brood met kaas of salami.",
+      dmsa: "Voor dit onderzoek hoeft u niet nuchter te zijn.",
+      maag: "U mag plaatsnemen in de wachtzaal. Elke 30 minuten wordt er een opname gemaakt van ongeveer 1 minuut, in totaal vijf opnames.",
+      dat: "Voor dit onderzoek hoeft u niet nuchter te zijn."
+    },
+    naarWachtzaal: "U mag zich begeven naar wachtzaal DOW3."
   },
+
   fr: {
     titel: "Votre temps d’attente",
+    onderzoeken: {
+      botscan: "Scintigraphie osseuse",
+      schildklier: "Scintigraphie thyroïdienne",
+      mibi: "Scintigraphie myocardique (MIBI)",
+      dmsa: "Scintigraphie DMSA",
+      maag: "Vidange gastrique",
+      dat: "Scintigraphie DAT"
+    },
     instructies: {
-      botscan: "Veuillez boire plusieurs verres d’eau.",
-      schildklier: "Veuillez prendre place dans la salle d’attente.",
-      mibi: "Veuillez prendre un petit-déjeuner gras (pain avec fromage ou salami)."
+      botscan: "Nous vous demandons de boire régulièrement de l’eau.",
+      schildklier: "Vous pouvez prendre place dans la salle d’attente.",
+      mibi: "Veuillez prendre un petit-déjeuner gras, par exemple du pain avec du fromage ou du salami.",
+      dmsa: "Vous ne devez pas être à jeun pour cet examen.",
+      maag: "Vous pouvez prendre place dans la salle d’attente. Une acquisition d’environ une minute sera réalisée toutes les 30 minutes, pour un total de cinq acquisitions.",
+      dat: "Vous ne devez pas être à jeun pour cet examen."
     },
     naarWachtzaal: "Veuillez vous rendre dans la salle d’attente DOW3."
   },
+
   en: {
     titel: "Your waiting time",
-    instructies: {
-      botscan: "Please drink several glasses of water.",
-      schildklier: "Please take a seat in the waiting area.",
-      mibi: "Please have a fatty breakfast (bread with cheese or salami)."
+    onderzoeken: {
+      botscan: "Bone scan",
+      schildklier: "Thyroid scan",
+      mibi: "MIBI scan",
+      dmsa: "DMSA scan",
+      maag: "Gastric emptying study",
+      dat: "DAT scan"
     },
-    naarWachtzaal: "Please proceed to the waiting area DOW3."
+    instructies: {
+      botscan: "We kindly ask you to drink water regularly.",
+      schildklier: "You may take a seat in the waiting area.",
+      mibi: "Please have a fatty breakfast, such as bread with cheese or salami.",
+      dmsa: "You do not need to fast for this examination.",
+      maag: "You may take a seat in the waiting area. An acquisition of approximately one minute will be performed every 30 minutes, for a total of five acquisitions.",
+      dat: "You do not need to fast for this examination."
+    },
+    naarWachtzaal: "Please proceed to waiting area DOW3."
   },
+
   uk: {
     titel: "Час очікування",
+    onderzoeken: {
+      botscan: "Сцинтиграфія кісток",
+      schildklier: "Сцинтиграфія щитоподібної залози",
+      mibi: "MIBI-сканування",
+      dmsa: "DMSA-сканування",
+      maag: "Дослідження спорожнення шлунка",
+      dat: "DAT-сканування"
+    },
     instructies: {
-      botscan: "Будь ласка, випийте кілька склянок води.",
-      schildklier: "Будь ласка, займіть місце в залі очікування.",
-      mibi: "Будь ласка, з’їжте жирний сніданок (хліб з сиром або салямі)."
+      botscan: "Будь ласка, регулярно пийте воду.",
+      schildklier: "Ви можете сісти в залі очікування.",
+      mibi: "Будь ласка, з’їжте жирний сніданок, наприклад хліб з сиром або салямі.",
+      dmsa: "Для цього обстеження не потрібно бути натщесерце.",
+      maag: "Ви можете сісти в залі очікування. Кожні 30 хвилин проводиться запис тривалістю приблизно одну хвилину, загалом п’ять записів.",
+      dat: "Для цього обстеження не потрібно бути натщесерце."
     },
     naarWachtzaal: "Будь ласка, пройдіть до зали очікування DOW3."
   }
@@ -116,9 +171,13 @@ const exactTijdEl = document.getElementById("exactTijd");
 const instructieEl = document.getElementById("instructie");
 const boodschapEl = document.getElementById("boodschap");
 
-/* ===== TITEL & INSTRUCTIE ===== */
+/* ===== TITEL + ONDERZOEK ===== */
 document.getElementById("titel").textContent =
   vertalingen[lang]?.titel || vertalingen.nl.titel;
+
+document.getElementById("onderzoekNaam").textContent =
+  vertalingen[lang]?.onderzoeken[onderzoek] ||
+  vertalingen.nl.onderzoeken.botscan;
 
 instructieEl.textContent =
   vertalingen[lang]?.instructies[onderzoek] ||
@@ -126,7 +185,8 @@ instructieEl.textContent =
 
 /* ===== EXACT TERUGKOMTIJD ===== */
 const eindDatum = new Date(endTs);
-exactTijdEl.textContent = "Terugkomtijd: " + 
+exactTijdEl.textContent =
+  "Terugkomtijd: " +
   eindDatum.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 
 /* ===== TIMER ===== */
@@ -138,7 +198,6 @@ function formatTijd(ms) {
   const h = Math.floor(s / 3600);
   const m = Math.floor((s % 3600) / 60);
   const sec = s % 60;
-
   return (h > 0 ? `${h}u ` : "") + `${m} min ${sec.toString().padStart(2,"0")} s`;
 }
 
@@ -146,7 +205,7 @@ function updateTimer() {
   const resterend = endTs - Date.now();
   timerEl.textContent = formatTijd(resterend);
 
-  if (resterend <= 5*60*1000) {
+  if (resterend <= 5 * 60 * 1000) {
     timerEl.classList.add("timer-rood");
 
     if (!meldingGetoond) {
@@ -156,7 +215,7 @@ function updateTimer() {
     }
 
     if (!trillingGedaan && navigator.vibrate) {
-      navigator.vibrate([300,200,300]);
+      navigator.vibrate([300, 200, 300]);
       trillingGedaan = true;
     }
   }
@@ -167,14 +226,8 @@ function updateTimer() {
 }
 
 updateTimer();
-setInterval(updateTimer,1000);
+setInterval(updateTimer, 1000);
 </script>
 
 </body>
 </html>
-
-
-
-
-
-
