@@ -46,6 +46,12 @@
     color: #333;
   }
 
+  #instructieAfbeelding {
+    margin-top: 15px;
+    max-width: 80px;
+    display: none;
+  }
+
   .boodschap-groen {
     color: #2e7d32;
     font-weight: 600;
@@ -69,6 +75,7 @@
 <div id="exactTijd"></div>
 <div id="timer">--</div>
 <div id="instructie"></div>
+<img id="instructieAfbeelding">
 <div id="boodschap" class="boodschap-groen"></div>
 
 <script>
@@ -78,7 +85,7 @@ const endTs = Number(params.get("end"));
 const onderzoek = params.get("onderzoek") || "botscan";
 const lang = params.get("lang") || "nl";
 
-/* ===== VERTALINGEN (ZIEKENHUISSTIJL) ===== */
+/* ===== VERTALINGEN ===== */
 const vertalingen = {
   nl: {
     titel: "Uw wachttijd",
@@ -100,7 +107,6 @@ const vertalingen = {
     },
     naarWachtzaal: "U mag zich begeven naar wachtzaal DOW3."
   },
-
   fr: {
     titel: "Votre temps d’attente",
     onderzoeken: {
@@ -121,7 +127,6 @@ const vertalingen = {
     },
     naarWachtzaal: "Veuillez vous rendre dans la salle d’attente DOW3."
   },
-
   en: {
     titel: "Your waiting time",
     onderzoeken: {
@@ -142,7 +147,6 @@ const vertalingen = {
     },
     naarWachtzaal: "Please proceed to waiting area DOW3."
   },
-
   uk: {
     titel: "Час очікування",
     onderzoeken: {
@@ -169,6 +173,7 @@ const vertalingen = {
 const timerEl = document.getElementById("timer");
 const exactTijdEl = document.getElementById("exactTijd");
 const instructieEl = document.getElementById("instructie");
+const imgEl = document.getElementById("instructieAfbeelding");
 const boodschapEl = document.getElementById("boodschap");
 
 /* ===== TITEL + ONDERZOEK ===== */
@@ -182,6 +187,17 @@ document.getElementById("onderzoekNaam").textContent =
 instructieEl.textContent =
   vertalingen[lang]?.instructies[onderzoek] ||
   vertalingen.nl.instructies.botscan;
+
+/* ===== INSTRUCTIEAFBEELDING (botscan/mibi) ===== */
+if (onderzoek === "botscan") {
+  imgEl.src = "water.png";
+  imgEl.style.display = "block";
+} else if (onderzoek === "mibi") {
+  imgEl.src = "boterham.png";
+  imgEl.style.display = "block";
+} else {
+  imgEl.style.display = "none";
+}
 
 /* ===== EXACT TERUGKOMTIJD ===== */
 const eindDatum = new Date(endTs);
@@ -206,25 +222,25 @@ function updateTimer() {
   timerEl.textContent = formatTijd(resterend);
 
   if (resterend <= 5 * 60 * 1000) {
-  timerEl.classList.add("timer-rood");
+    timerEl.classList.add("timer-rood");
 
-  // Instructie verbergen bij botscan en MIBI
-  if (onderzoek === "botscan" || onderzoek === "mibi") {
-    instructieEl.textContent = "";
+    // instructie + afbeelding weg voor botscan en MIBI
+    if (onderzoek === "botscan" || onderzoek === "mibi") {
+      instructieEl.textContent = "";
+      imgEl.style.display = "none";
+    }
+
+    if (!meldingGetoond) {
+      boodschapEl.textContent = vertalingen[lang].naarWachtzaal;
+      boodschapEl.classList.add("fade-in");
+      meldingGetoond = true;
+    }
+
+    if (!trillingGedaan && navigator.vibrate) {
+      navigator.vibrate([300, 200, 300]);
+      trillingGedaan = true;
+    }
   }
-
-  if (!meldingGetoond) {
-    boodschapEl.textContent = vertalingen[lang].naarWachtzaal;
-    boodschapEl.classList.add("fade-in");
-    meldingGetoond = true;
-  }
-
-  if (!trillingGedaan && navigator.vibrate) {
-    navigator.vibrate([300, 200, 300]);
-    trillingGedaan = true;
-  }
-}
-
 
   if (resterend <= 0) {
     timerEl.textContent = "0 min 00 s";
@@ -237,4 +253,5 @@ setInterval(updateTimer, 1000);
 
 </body>
 </html>
+
 
