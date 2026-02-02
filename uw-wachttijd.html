@@ -13,15 +13,27 @@
     background: #f7f9fb;
   }
 
+  #logo {
+    max-width: 180px;
+    margin: 0 auto 20px auto;
+    display: block;
+  }
+
   h1 {
     margin-bottom: 5px;
   }
 
-  #onderzoekNaam {
+  #onderzoekTitel {
     font-size: 1.2em;
     font-weight: 600;
+    color: #555;
     margin-bottom: 15px;
-    color: #333;
+  }
+
+  #exactTijd {
+    font-size: 1.3em;
+    color: #444;
+    margin-bottom: 15px;
   }
 
   #timer {
@@ -34,24 +46,17 @@
     color: #c62828;
   }
 
-  #exactTijd {
-    font-size: 1.3em;
-    color: #444;
-    margin-bottom: 15px;
-  }
-
   #instructie {
-    font-size: 1.2em;
-    margin-top: 15px;
+    font-size: 1.15em;
+    margin-top: 20px;
     color: #333;
   }
 
   #instructieAfbeelding {
-  margin: 15px auto;  /* centreren */
-  display: block;      /* nodig voor margin auto */
-  max-width: 80px;
-}
-
+    margin: 15px auto;
+    display: block;
+    max-width: 80px;
+  }
 
   .boodschap-groen {
     color: #2e7d32;
@@ -70,13 +75,17 @@
 
 <body>
 
+<img src="sjabloonalma.png" alt="Ziekenhuis AZ Alma" id="logo">
+
 <h1 id="titel"></h1>
-<div id="onderzoekNaam"></div>
+<div id="onderzoekTitel"></div>
 
 <div id="exactTijd"></div>
 <div id="timer">--</div>
+
+<img id="instructieAfbeelding" style="display:none;">
 <div id="instructie"></div>
-<img id="instructieAfbeelding">
+
 <div id="boodschap" class="boodschap-groen"></div>
 
 <script>
@@ -92,81 +101,75 @@ const vertalingen = {
     titel: "Uw wachttijd",
     onderzoeken: {
       botscan: "Botscan",
-      schildklier: "Schildklierscan",
+      schildklier: "Schildklieronderzoek",
       mibi: "MIBI-scan",
       dmsa: "DMSA-scan",
       maag: "Maagontlediging",
       dat: "DAT-scan"
     },
     instructies: {
-      botscan: "Wij vragen u om regelmatig water te drinken.",
-      schildklier: "U mag plaatsnemen in de wachtzaal.",
-      mibi: "Gelieve een vet ontbijt te gebruiken, bijvoorbeeld brood met kaas of salami.",
-      dmsa: "Voor dit onderzoek hoeft u niet nuchter te zijn.",
-      maag: "U mag plaatsnemen in de wachtzaal. Elke 30 minuten wordt er een opname gemaakt van ongeveer 1 minuut, in totaal vijf opnames.",
-      dat: "Voor dit onderzoek hoeft u niet nuchter te zijn."
+      botscan: "Gelieve enkele glazen water te drinken.",
+      schildklier: "",
+      mibi: "Gelieve een vettig ontbijt te nemen (boterham met kaas of salami).",
+      dmsa: "U hoeft niet nuchter te zijn.",
+      maag: "U mag plaatsnemen in de wachtzaal. Om het halfuur (5 in totaal) zal er een opname gebeuren van ongeveer 1 minuut.",
+      dat: "U hoeft niet nuchter te zijn."
+    },
+    afbeelding: {
+      botscan: "water.png",
+      mibi: "boterham.png"
     },
     naarWachtzaal: "U mag zich begeven naar wachtzaal DOW3."
   },
+
   fr: {
     titel: "Votre temps d’attente",
     onderzoeken: {
       botscan: "Scintigraphie osseuse",
-      schildklier: "Scintigraphie thyroïdienne",
-      mibi: "Scintigraphie myocardique (MIBI)",
+      schildklier: "Examen thyroïdien",
+      mibi: "Scintigraphie MIBI",
       dmsa: "Scintigraphie DMSA",
       maag: "Vidange gastrique",
-      dat: "Scintigraphie DAT"
+      dat: "DAT-scan"
     },
     instructies: {
-      botscan: "Nous vous demandons de boire régulièrement de l’eau.",
-      schildklier: "Vous pouvez prendre place dans la salle d’attente.",
-      mibi: "Veuillez prendre un petit-déjeuner gras, par exemple du pain avec du fromage ou du salami.",
-      dmsa: "Vous ne devez pas être à jeun pour cet examen.",
-      maag: "Vous pouvez prendre place dans la salle d’attente. Une acquisition d’environ une minute sera réalisée toutes les 30 minutes, pour un total de cinq acquisitions.",
-      dat: "Vous ne devez pas être à jeun pour cet examen."
+      botscan: "Veuillez boire plusieurs verres d’eau.",
+      schildklier: "",
+      mibi: "Veuillez prendre un petit-déjeuner gras (pain avec fromage ou salami).",
+      dmsa: "Vous ne devez pas être à jeun.",
+      maag: "Veuillez prendre place dans la salle d’attente. Une acquisition aura lieu toutes les 30 minutes (5 au total), durant environ 1 minute.",
+      dat: "Vous ne devez pas être à jeun."
+    },
+    afbeelding: {
+      botscan: "water.png",
+      mibi: "boterham.png"
     },
     naarWachtzaal: "Veuillez vous rendre dans la salle d’attente DOW3."
   },
+
   en: {
     titel: "Your waiting time",
     onderzoeken: {
       botscan: "Bone scan",
-      schildklier: "Thyroid scan",
+      schildklier: "Thyroid examination",
       mibi: "MIBI scan",
       dmsa: "DMSA scan",
       maag: "Gastric emptying study",
       dat: "DAT scan"
     },
     instructies: {
-      botscan: "We kindly ask you to drink water regularly.",
-      schildklier: "You may take a seat in the waiting area.",
-      mibi: "Please have a fatty breakfast, such as bread with cheese or salami.",
-      dmsa: "You do not need to fast for this examination.",
-      maag: "You may take a seat in the waiting area. An acquisition of approximately one minute will be performed every 30 minutes, for a total of five acquisitions.",
-      dat: "You do not need to fast for this examination."
+      botscan: "Please drink several glasses of water.",
+      schildklier: "",
+      mibi: "Please have a fatty breakfast (bread with cheese or salami).",
+      dmsa: "You do not need to be fasting.",
+      maag: "Please take a seat in the waiting area. Imaging will occur every 30 minutes (5 times total), lasting about 1 minute each.",
+      dat: "You do not need to be fasting."
     },
-    naarWachtzaal: "Please proceed to waiting area DOW3."
-  },
-  uk: {
-    titel: "Час очікування",
-    onderzoeken: {
-      botscan: "Сцинтиграфія кісток",
-      schildklier: "Сцинтиграфія щитоподібної залози",
-      mibi: "MIBI-сканування",
-      dmsa: "DMSA-сканування",
-      maag: "Дослідження спорожнення шлунка",
-      dat: "DAT-сканування"
+    afbeelding: {
+      botscan: "water.png",
+      mibi: "boterham.png"
     },
-    instructies: {
-      botscan: "Будь ласка, регулярно пийте воду.",
-      schildklier: "Ви можете сісти в залі очікування.",
-      mibi: "Будь ласка, з’їжте жирний сніданок, наприклад хліб з сиром або салямі.",
-      dmsa: "Для цього обстеження не потрібно бути натщесерце.",
-      maag: "Ви можете сісти в залі очікування. Кожні 30 хвилин проводиться запис тривалістю приблизно одну хвилину, загалом п’ять записів.",
-      dat: "Для цього обстеження не потрібно бути натщесерце."
-    },
-    naarWachtzaal: "Будь ласка, пройдіть до зали очікування DOW3."
+    naarWachtzaal: "Please proceed to the waiting area DOW3."
   }
 };
 
@@ -174,44 +177,34 @@ const vertalingen = {
 const timerEl = document.getElementById("timer");
 const exactTijdEl = document.getElementById("exactTijd");
 const instructieEl = document.getElementById("instructie");
-const imgEl = document.getElementById("instructieAfbeelding");
 const boodschapEl = document.getElementById("boodschap");
+const afbeeldingEl = document.getElementById("instructieAfbeelding");
 
-/* ===== TITEL + ONDERZOEK ===== */
+/* ===== TITEL & ONDERZOEK ===== */
 document.getElementById("titel").textContent =
   vertalingen[lang]?.titel || vertalingen.nl.titel;
 
-document.getElementById("onderzoekNaam").textContent =
-  vertalingen[lang]?.onderzoeken[onderzoek] ||
-  vertalingen.nl.onderzoeken.botscan;
+document.getElementById("onderzoekTitel").textContent =
+  vertalingen[lang]?.onderzoeken[onderzoek] || "";
 
-instructieEl.textContent =
-  vertalingen[lang]?.instructies[onderzoek] ||
-  vertalingen.nl.instructies.botscan;
+/* ===== INSTRUCTIE + AFBEELDING ===== */
+const instructieTekst = vertalingen[lang]?.instructies[onderzoek] || "";
+instructieEl.textContent = instructieTekst;
 
-/* ===== INSTRUCTIEAFBEELDING (botscan/mibi) ===== */
-if (onderzoek === "botscan") {
-  imgEl.src = "water.png";
-  imgEl.style.display = "block";
-} else if (onderzoek === "mibi") {
-  imgEl.src = "boterham.png";
-  imgEl.style.display = "block";
-} else {
-  imgEl.style.display = "none";
+const afbeelding = vertalingen[lang]?.afbeelding?.[onderzoek];
+if (afbeelding) {
+  afbeeldingEl.src = afbeelding;
+  afbeeldingEl.style.display = "block";
 }
 
 /* ===== EXACT TERUGKOMTIJD ===== */
 const eindDatum = new Date(endTs);
-exactTijdEl.textContent =
-  "Terugkomtijd: " +
+exactTijdEl.textContent = "Terugkomtijd: " +
   eindDatum.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 
 /* ===== TIMER ===== */
 let meldingGetoond = false;
 let trillingGedaan = false;
-
-// Onderzoeken waarvoor geen 5-min boodschap
-const geen5MinBoodschap = ["schildklier", "maag"];
 
 function formatTijd(ms) {
   const s = Math.max(0, Math.floor(ms / 1000));
@@ -228,21 +221,16 @@ function updateTimer() {
   if (resterend <= 5 * 60 * 1000) {
     timerEl.classList.add("timer-rood");
 
-    // instructie + afbeelding weg voor botscan en MIBI
-    if (onderzoek === "botscan" || onderzoek === "mibi") {
+    if (!meldingGetoond) {
       instructieEl.textContent = "";
-      imgEl.style.display = "none";
-    }
-
-    // toon 5-minutenboodschap alleen voor onderzoeken die niet in uitsluitlijst staan
-    if (!meldingGetoond && !geen5MinBoodschap.includes(onderzoek)) {
+      afbeeldingEl.style.display = "none";
       boodschapEl.textContent = vertalingen[lang].naarWachtzaal;
       boodschapEl.classList.add("fade-in");
       meldingGetoond = true;
     }
 
     if (!trillingGedaan && navigator.vibrate) {
-      navigator.vibrate([300, 200, 300]);
+      navigator.vibrate([300,200,300]);
       trillingGedaan = true;
     }
   }
@@ -258,4 +246,3 @@ setInterval(updateTimer, 1000);
 
 </body>
 </html>
-
