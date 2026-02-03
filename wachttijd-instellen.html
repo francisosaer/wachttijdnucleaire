@@ -12,6 +12,14 @@
     max-width: 420px;
     margin: auto;
   }
+#logo {
+  display: block;       /* zorgt dat margin werkt */
+  margin: 0 auto 20px;  /* horizontaal centreren en 20px onder de afbeelding */
+  max-width: 150px;     /* pas aan naar wens */
+  height: auto;         /* behoudt verhouding */
+}
+
+  
 
   h1 {
     text-align: center;
@@ -85,6 +93,10 @@
 </head>
 
 <body>
+
+  <!-- Logo boven de titel -->
+<img src="sjabloonalma.png" alt="Ziekenhuis AZ Alma" id="logo">
+  
 
 <h1>Wachttijd instellen</h1>
 
@@ -189,3 +201,4 @@ document.getElementById("verstuur").addEventListener("click", () => {
 
 </body>
 </html>
+
